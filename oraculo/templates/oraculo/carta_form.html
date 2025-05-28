@@ -130,7 +130,7 @@
                                     <p class="text-sm text-cosmic-300 mb-2">Imagen actual:</p>
                                     <img src="{{ carta.imagen.url }}" 
                                          alt="Imagen actual"
-                                         class="w-32 h-40 object-cover rounded-lg border border-gold-500/30">
+                                         class="w-full object-contain rounded-xl border-2 border-primary-500/30">
                                 </div>
                             {% endif %}
                             
@@ -174,7 +174,7 @@
                                    class="block text-sm font-medium text-cosmic-200 mb-2">
                                 <i class="fas fa-arrow-down mr-2 text-red-400"></i>
                                 Significado Invertido
-                                <span class="text-red-400 ml-1">*</span>
+                                <span class="text-cosmic-400 ml-1 text-xs">(Opcional)</span>
                             </label>
                             {{ form.significado_invertido }}
                             {% if form.significado_invertido.errors %}
@@ -185,7 +185,8 @@
                                 </div>
                             {% endif %}
                             <p class="mt-1 text-xs text-cosmic-400">
-                                Interpretación cuando la carta aparece invertida o bloqueada
+                                Interpretación cuando la carta aparece invertida o bloqueada. 
+                                <span class="text-gold-400">Déjalo vacío si este oráculo no maneja posiciones invertidas.</span>
                             </p>
                         </div>
 
@@ -196,7 +197,8 @@
                                 <span class="text-gold-300 text-sm font-medium">Campos obligatorios</span>
                             </div>
                             <p class="text-gold-200 text-sm mt-1">
-                                Los campos marcados con <span class="text-red-400">*</span> son obligatorios
+                                Los campos marcados con <span class="text-red-400">*</span> son obligatorios. 
+                                El significado invertido es opcional para oráculos que no manejan posiciones invertidas.
                             </p>
                         </div>
 
@@ -252,6 +254,26 @@
                                     Actualizada: {{ carta.fecha_actualizacion|timesince }} atrás
                                 </div>
                             </div>
+
+                            <!-- Significado Invertido Status -->
+                            <div class="bg-cosmic-800/50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-cosmic-300 mb-2">Estado del Significado</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-arrow-up text-green-400 mr-2"></i>
+                                        <span class="text-green-300 text-sm">Normal: Completado</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        {% if carta.significado_invertido %}
+                                            <i class="fas fa-arrow-down text-red-400 mr-2"></i>
+                                            <span class="text-red-300 text-sm">Invertido: Completado</span>
+                                        {% else %}
+                                            <i class="fas fa-minus text-cosmic-400 mr-2"></i>
+                                            <span class="text-cosmic-400 text-sm">Invertido: No definido</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     {% else %}
                         <!-- Create Mode - Tips -->
@@ -293,6 +315,10 @@
                                     <li>• Necesidad de reflexión</li>
                                     <li>• Energía que requiere trabajo</li>
                                 </ul>
+                                <div class="mt-2 p-2 bg-cosmic-700/50 rounded text-xs text-cosmic-300">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    <strong>Opcional:</strong> Algunos oráculos no manejan posiciones invertidas
+                                </div>
                             </div>
                         </div>
                     {% endif %}

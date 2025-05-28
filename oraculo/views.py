@@ -5,10 +5,65 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.urls import reverse
 from django.http import JsonResponse
+from django.db import models
+from user.models import CustomUser
 from .models import Set, Mazo, Carta
 from .forms import SetForm, MazoForm, CartaForm, BuscarCartasForm
 
-# ============== DASHBOARD ============== #
+# ============== HELPER FUNCTIONS ============== #
+
+def is_staff_user(user):
+    """Helper function to check if user is staff"""
+    return user.is_authenticated and user.is_staff
+
+# ============== DASHBOARD VIEWS ============== #
+
+# ============== DASHBOARDs ============== #
+@login_required
+@user_passes_test(is_staff_user)
+def admin_dashboard(request):
+    """
+    Dashboard administrativo para gestionar contenido
+    """
+    # Estadísticas generales
+    total_sets = Set.objects.count()
+    total_mazos = Mazo.objects.count()
+    total_cartas = Carta.objects.count()
+    total_usuarios = CustomUser.objects.count()
+    
+    # Últimos elementos creados
+    ultimos_sets = Set.objects.all().order_by('-fecha_creacion')[:5]
+    ultimos_mazos = Mazo.objects.select_related('set').order_by('-fecha_creacion')[:5]
+    ultimas_cartas = Carta.objects.select_related('mazo', 'mazo__set').order_by('-fecha_creacion')[:5]
+    
+    # Sets con más mazos
+    sets_populares = Set.objects.annotate(
+        num_mazos=models.Count('mazos')
+    ).order_by('-num_mazos')[:5]
+    
+    # Mazos con más cartas
+    mazos_completos = Mazo.objects.annotate(
+        num_cartas=models.Count('cartas')
+    ).order_by('-num_cartas')[:5]
+    
+    context = {
+        'title': 'Dashboard Administrativo',
+        # Estadísticas
+        'total_sets': total_sets,
+        'total_mazos': total_mazos,
+        'total_cartas': total_cartas,
+        'total_usuarios': total_usuarios,
+        # Últimos elementos
+        'ultimos_sets': ultimos_sets,
+        'ultimos_mazos': ultimos_mazos,
+        'ultimas_cartas': ultimas_cartas,
+        # Populares
+        'sets_populares': sets_populares,
+        'mazos_completos': mazos_completos,
+    }
+    
+    return render(request, 'oraculo/admin_dashboard.html', context)
+
 
 def dashboard(request):
     """
@@ -277,7 +332,8 @@ def mazo_delete(request, pk):
     return render(request, 'oraculo/mazo_confirm_delete.html', context)
 
 # ============== CARTA VIEWS ============== #
-
+@login_required
+@user_passes_test(is_staff_user)
 def carta_list(request):
     """
     Lista todas las cartas (público con búsqueda)
@@ -319,6 +375,8 @@ def carta_list(request):
     }
     return render(request, 'oraculo/carta_list.html', context)
 
+@login_required
+@user_passes_test(is_staff_user)
 def carta_detail(request, pk):
     """
     Detalle de una carta específica (público)

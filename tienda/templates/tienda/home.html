@@ -1,0 +1,220 @@
+<!-- tienda/templates/tienda/home.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20">
+    <!-- Hero Section -->
+    <section class="pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-6xl font-mystical font-bold text-primary-300 mb-4">
+                Tienda Tarotnaútica
+            </h1>
+            <p class="text-xl text-cosmic-400 mb-8 max-w-3xl mx-auto">
+                Descubre mazos únicos y conecta con la sabiduría ancestral a través de nuestros oráculos cuidadosamente seleccionados
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'tienda:producto_list' %}" 
+                   class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-store mr-2"></i>
+                    Ver Catálogo
+                </a>
+                {% if user.is_staff %}
+                    <a href="{% url 'tienda:admin_producto_list' %}" 
+                       class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
+                        <i class="fas fa-cog mr-2"></i>
+                        Administrar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Productos Destacados -->
+    {% if productos_destacados %}
+        <section class="py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
+                        Productos Destacados
+                    </h2>
+                    <p class="text-cosmic-400">Los mazos más populares y recomendados por nuestros expertos</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for producto in productos_destacados %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                            <!-- Imagen del producto (reverso del mazo) -->
+                            <div class="relative">
+                                {% if producto.mazo.imagen_reverso %}
+                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                         alt="{{ producto.mazo.nombre }}"
+                                         class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% else %}
+                                    <div class="w-full h-64 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
+                                        <i class="fas fa-cards-blank text-4xl text-cosmic-400"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Badge de destacado -->
+                                <div class="absolute top-2 left-2 bg-gold-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    <i class="fas fa-star mr-1"></i>Destacado
+                                </div>
+                                
+                                <!-- Badge de descuento -->
+                                {% if producto.tiene_descuento %}
+                                    <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                        -{{ producto.porcentaje_descuento }}%
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Contenido del producto -->
+                            <div class="p-6">
+                                <h3 class="text-xl font-mystical font-semibold text-primary-300 mb-2">
+                                    {{ producto.mazo.nombre }}
+                                </h3>
+                                <p class="text-cosmic-400 text-sm mb-3">
+                                    {{ producto.mazo.set.nombre }}
+                                </p>
+                                
+                                {% if producto.descripcion_adicional %}
+                                    <p class="text-cosmic-300 text-sm mb-4 line-clamp-2">
+                                        {{ producto.descripcion_adicional|truncatewords:20 }}
+                                    </p>
+                                {% endif %}
+
+                                <!-- Precio -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        {% if producto.tiene_descuento %}
+                                            <span class="text-2xl font-bold text-green-400">${{ producto.precio_actual }}</span>
+                                            <span class="text-sm text-cosmic-400 line-through">${{ producto.precio }}</span>
+                                        {% else %}
+                                            <span class="text-2xl font-bold text-gold-400">${{ producto.precio_actual }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-xs text-cosmic-400">
+                                        {{ producto.mazo.total_cartas }} cartas
+                                    </span>
+                                </div>
+
+                                <!-- Botones -->
+                                <div class="flex gap-2">
+                                    <a href="{{ producto.link_compra }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-4 rounded-lg font-semibold transition-all duration-300">
+                                        <i class="fas fa-shopping-cart mr-1"></i>
+                                        ${{ producto.precio_actual }}
+                                    </a>
+                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                                       class="bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-2 px-4 rounded-lg transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Productos en Oferta -->
+    {% if productos_oferta %}
+        <section class="py-16 bg-cosmic-800/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-mystical font-bold text-gold-300 mb-4">
+                        <i class="fas fa-tags mr-3"></i>
+                        Ofertas Especiales
+                    </h2>
+                    <p class="text-cosmic-400">Aprovecha estos descuentos únicos en mazos seleccionados</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for producto in productos_oferta %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-gold-500/20 hover:border-gold-400/40 transition-all duration-300 group">
+                            <div class="relative">
+                                {% if producto.mazo.imagen_reverso %}
+                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                         alt="{{ producto.mazo.nombre }}"
+                                         class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% endif %}
+                                <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    -{{ producto.porcentaje_descuento }}%
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-primary-300 mb-2">{{ producto.mazo.nombre }}</h4>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span class="text-lg font-bold text-green-400">${{ producto.precio_actual }}</span>
+                                        <span class="text-sm text-cosmic-400 line-through ml-2">${{ producto.precio }}</span>
+                                    </div>
+                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                                       class="text-gold-400 hover:text-gold-300">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Productos Recientes -->
+    {% if productos_recientes %}
+        <section class="py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-mystical font-bold text-mystic-300 mb-4">
+                        Últimos Agregados
+                    </h2>
+                    <p class="text-cosmic-400">Los mazos más recientes en nuestra colección</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for producto in productos_recientes %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-mystic-500/20 hover:border-mystic-400/40 transition-all duration-300 group">
+                            <div class="relative">
+                                {% if producto.mazo.imagen_reverso %}
+                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                         alt="{{ producto.mazo.nombre }}"
+                                         class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% endif %}
+                                <div class="absolute top-2 left-2 bg-mystic-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    Nuevo
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-primary-300 mb-1">{{ producto.mazo.nombre }}</h4>
+                                <p class="text-xs text-cosmic-400 mb-2">{{ producto.mazo.set.nombre }}</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-lg font-bold text-gold-400">${{ producto.precio_actual }}</span>
+                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                                       class="text-mystic-400 hover:text-mystic-300">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- CTA Final -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-cosmic-700/40 via-primary-900/20 to-cosmic-700/40 backdrop-blur-sm rounded-2xl p-8 border border-gold-500/20">
+                <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
+                    ¿Listo para Comenzar tu Viaje?
+                </h2>
+                <p class="text

@@ -48,25 +48,34 @@
 
                     <!-- Basic Info -->
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
-                            <span class="text-cosmic-300 font-medium">Código:</span>
-                            <span class="text-gold-400 font-mono">{{ mazo.codigo }}</span>
+                        <div class="flex justify-between items-start py-3 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium text-sm">Código:</span>
+                            <span class="text-gold-400 font-mono text-sm ml-4">{{ mazo.codigo }}</span>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
-                            <span class="text-cosmic-300 font-medium">Set:</span>
-                            <span class="text-primary-400">{{ mazo.set.nombre }}</span>
+                        <div class="flex justify-between items-start py-3 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium text-sm">Set:</span>
+                            <div class="text-right ml-4 flex-1">
+                                <div class="text-primary-400 font-semibold text-base">{{ mazo.set.nombre }}</div>
+                                <div class="text-cosmic-400 text-xs">{{ mazo.set.codigo }}</div>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
-                            <span class="text-cosmic-300 font-medium">Total Cartas:</span>
-                            <span class="text-mystic-400 font-semibold">{{ mazo.total_cartas }}</span>
+                        <div class="flex justify-between items-center py-3 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium text-sm">Total Cartas:</span>
+                            <span class="text-mystic-400 font-semibold text-lg ml-4">{{ mazo.total_cartas }}</span>
                         </div>
-                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
-                            <span class="text-cosmic-300 font-medium">Creado:</span>
-                            <span class="text-cosmic-200">{{ mazo.fecha_creacion|date:"d/m/Y" }}</span>
+                        <div class="flex justify-between items-start py-3 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium text-sm">Creado:</span>
+                            <div class="text-right ml-4">
+                                <div class="text-cosmic-200 text-sm">{{ mazo.fecha_creacion|date:"d/m/Y" }}</div>
+                                <div class="text-cosmic-400 text-xs">{{ mazo.fecha_creacion|date:"H:i" }}</div>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center py-2">
-                            <span class="text-cosmic-300 font-medium">Actualizado:</span>
-                            <span class="text-cosmic-200">{{ mazo.fecha_actualizacion|timesince }} atrás</span>
+                        <div class="flex justify-between items-start py-3">
+                            <span class="text-cosmic-300 font-medium text-sm">Actualizado:</span>
+                            <div class="text-right ml-4">
+                                <div class="text-cosmic-200 text-sm">{{ mazo.fecha_actualizacion|timesince }} atrás</div>
+                                <div class="text-cosmic-400 text-xs">{{ mazo.fecha_actualizacion|date:"d/m/Y H:i" }}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -96,14 +105,14 @@
             <!-- Description and Cards -->
             <div class="lg:col-span-2 space-y-8">
                 <!-- Description -->
-                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-mystic-500/20">
-                    <h2 class="text-xl font-mystical font-semibold text-mystic-300 mb-4">
-                        <i class="fas fa-align-left mr-2"></i>
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-mystic-500/20">
+                    <h2 class="text-2xl font-mystical font-semibold text-mystic-300 mb-6">
+                        <i class="fas fa-align-left mr-3 text-mystic-400"></i>
                         Descripción
                     </h2>
-                    <p class="text-cosmic-200 leading-relaxed">
-                        {{ mazo.descripcion }}
-                    </p>
+                    <div class="prose prose-invert max-w-none">
+                        <div class="text-cosmic-200 leading-relaxed text-justify whitespace-pre-line font-medium text-base">{{ mazo.descripcion }}</div>
+                    </div>
                 </div>
 
                 <!-- Cards Section -->

@@ -92,7 +92,7 @@
                             {% if carta.imagen %}
                                 <img src="{{ carta.imagen.url }}" 
                                      alt="{{ carta.nombre }}"
-                                     class="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-300">
+                                     class="w-full object-contain rounded-xl border-2 border-primary-500/30 group-hover:scale-105 transition-transform duration-300">
                                 <!-- Card Number Overlay -->
                                 <div class="absolute top-2 left-2 bg-primary-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
                                     #{{ carta.numero }}
@@ -229,30 +229,6 @@
                 {% endif %}
             </div>
         {% endif %}
-
-        <!-- Call to Action -->
-        <div class="mt-12 text-center">
-            <div class="bg-gradient-to-r from-primary-500/10 via-mystic-500/10 to-gold-500/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
-                <h3 class="text-2xl font-mystical font-bold text-primary-300 mb-4">
-                    ¿Listo para una consulta?
-                </h3>
-                <p class="text-cosmic-300 mb-6 max-w-2xl mx-auto">
-                    Conecta con el Motor Náutica y deja que las cartas revelen los secretos que tu alma necesita conocer
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#" 
-                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center">
-                        <i class="fas fa-magic mr-2"></i>
-                        Comenzar Consulta
-                    </a>
-                    <a href="{% url 'oraculo:motor_nautica' %}" 
-                       class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
-                        <i class="fas fa-cog mr-2"></i>
-                        Conocer el Motor Náutica
-                    </a>
-                </div>
-            </div>
-        </div>
 
         <!-- Back to Dashboard -->
         <div class="mt-8 text-center">

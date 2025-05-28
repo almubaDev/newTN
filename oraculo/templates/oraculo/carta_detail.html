@@ -44,7 +44,7 @@
                         {% if carta.imagen %}
                             <img src="{{ carta.imagen.url }}" 
                                  alt="{{ carta.nombre }}"
-                                 class="w-full aspect-[3/4] object-cover rounded-xl border-2 border-primary-500/30">
+                                 class="w-full object-contain rounded-xl border-2 border-primary-500/30">
                         {% else %}
                             <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-primary-500/30 flex items-center justify-center">
                                 <div class="text-center">
@@ -74,6 +74,16 @@
                         <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
                             <span class="text-cosmic-300 font-medium">Set:</span>
                             <span class="text-gold-400 font-medium">{{ carta.mazo.set.nombre }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Tipo:</span>
+                            <span class="{% if carta.significado_invertido %}text-green-400{% else %}text-cosmic-400{% endif %} font-medium text-sm">
+                                {% if carta.significado_invertido %}
+                                    <i class="fas fa-sync-alt mr-1"></i>Dual (Normal/Invertido)
+                                {% else %}
+                                    <i class="fas fa-arrow-up mr-1"></i>Solo Normal
+                                {% endif %}
+                            </span>
                         </div>
                         <div class="flex justify-between items-center py-2">
                             <span class="text-cosmic-300 font-medium">Creada:</span>
@@ -108,24 +118,50 @@
                         Significado Normal
                     </h2>
                     <div class="prose prose-invert max-w-none">
-                        <p class="text-cosmic-200 leading-relaxed">
-                            {{ carta.significado_normal|linebreaks }}
-                        </p>
+                        <div class="text-cosmic-200 leading-relaxed text-justify whitespace-pre-line">
+                            {{ carta.significado_normal }}
+                        </div>
                     </div>
                 </div>
 
                 <!-- Significado Invertido -->
-                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-red-500/20">
-                    <h2 class="text-2xl font-mystical font-semibold text-red-300 mb-4 flex items-center">
-                        <i class="fas fa-arrow-down mr-3 text-red-400"></i>
-                        Significado Invertido
-                    </h2>
-                    <div class="prose prose-invert max-w-none">
-                        <p class="text-cosmic-200 leading-relaxed">
-                            {{ carta.significado_invertido|linebreaks }}
-                        </p>
+                {% if carta.significado_invertido %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-red-500/20">
+                        <h2 class="text-2xl font-mystical font-semibold text-red-300 mb-4 flex items-center">
+                            <i class="fas fa-arrow-down mr-3 text-red-400"></i>
+                            Significado Invertido
+                        </h2>
+                        <div class="prose prose-invert max-w-none">
+                            <div class="text-cosmic-200 leading-relaxed text-justify whitespace-pre-line">
+                                {{ carta.significado_invertido }}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                {% else %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-cosmic-500/20">
+                        <h2 class="text-2xl font-mystical font-semibold text-cosmic-300 mb-4 flex items-center">
+                            <i class="fas fa-info-circle mr-3 text-cosmic-400"></i>
+                            Significado Invertido
+                        </h2>
+                        <div class="bg-cosmic-800/50 rounded-lg p-6 text-center">
+                            <i class="fas fa-ban text-3xl text-cosmic-400 mb-4"></i>
+                            <h3 class="text-lg font-semibold text-cosmic-300 mb-2">
+                                Sin Significado Invertido
+                            </h3>
+                            <p class="text-cosmic-400 leading-relaxed">
+                                Esta carta pertenece a un oráculo que no maneja posiciones invertidas. 
+                                Su interpretación se basa únicamente en el significado normal.
+                            </p>
+                            <div class="mt-4 p-3 bg-primary-500/20 rounded-lg border border-primary-500/30">
+                                <p class="text-primary-200 text-sm">
+                                    <i class="fas fa-lightbulb mr-2"></i>
+                                    <strong>Nota:</strong> Algunos sistemas de adivinación como oráculos de ángeles, 
+                                    cartas de afirmaciones, o sistemas contemplativos no utilizan interpretaciones invertidas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
 
                 <!-- Admin Notes -->
                 {% if user.is_staff %}
@@ -148,6 +184,25 @@
                                     <div>Set: {{ carta.mazo.set.codigo }}</div>
                                     <div>Mazo: {{ carta.mazo.codigo }}</div>
                                     <div>Posición: {{ carta.numero }}/{{ carta.mazo.total_cartas }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Significado Status -->
+                        <div class="mt-4 p-4 bg-cosmic-800/30 rounded-lg">
+                            <h4 class="font-semibold text-cosmic-300 mb-2">Estado de Significados</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-3 bg-green-500/20 rounded-lg border border-green-500/30">
+                                    <i class="fas fa-arrow-up text-green-400 text-xl mb-2"></i>
+                                    <div class="text-green-300 font-semibold">Normal</div>
+                                    <div class="text-green-200 text-xs">Completado</div>
+                                </div>
+                                <div class="text-center p-3 {% if carta.significado_invertido %}bg-red-500/20 border border-red-500/30{% else %}bg-cosmic-600/20 border border-cosmic-500/30{% endif %} rounded-lg">
+                                    <i class="fas {% if carta.significado_invertido %}fa-arrow-down text-red-400{% else %}fa-minus text-cosmic-400{% endif %} text-xl mb-2"></i>
+                                    <div class="{% if carta.significado_invertido %}text-red-300{% else %}text-cosmic-400{% endif %} font-semibold">Invertido</div>
+                                    <div class="{% if carta.significado_invertido %}text-red-200{% else %}text-cosmic-500{% endif %} text-xs">
+                                        {% if carta.significado_invertido %}Completado{% else %}No definido{% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>

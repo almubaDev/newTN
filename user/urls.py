@@ -8,7 +8,7 @@ urlpatterns = [
     # Autenticación
     path('register/', views.CustomRegisterView.as_view(), name='register'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(next_page='oraculo:index'), name='logout'),
+    path('logout/', views.custom_logout_view, name='logout'),
     
     # Perfil
     path('profile/', views.profile_view, name='profile'),

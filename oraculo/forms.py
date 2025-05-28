@@ -124,14 +124,15 @@ class CartaForm(forms.ModelForm):
     significado_normal = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-green-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-colors',
-            'placeholder': 'Significado cuando la carta aparece en posición normal...',
+            'placeholder': 'Interpretación cuando la carta aparece en posición normal...',
             'rows': 5
         })
     )
     significado_invertido = forms.CharField(
+        required=False,  # ← CRÍTICO: Esto hace que el campo no sea obligatorio
         widget=forms.Textarea(attrs={
             'class': 'w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-red-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 transition-colors',
-            'placeholder': 'Significado cuando la carta aparece invertida...',
+            'placeholder': 'Interpretación cuando la carta aparece invertida (opcional)...',
             'rows': 5
         })
     )

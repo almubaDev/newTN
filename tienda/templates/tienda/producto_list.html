@@ -1,0 +1,319 @@
+<!-- tienda/templates/tienda/producto_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'tienda:home' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <div class="flex-1">
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                        Catálogo de Productos
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Descubre todos nuestros mazos místicos disponibles
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="mb-8">
+            <form method="GET" class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20">
+                <div class="grid lg:grid-cols-5 gap-4">
+                    <!-- Búsqueda -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-search mr-2 text-primary-400"></i>
+                            Buscar Productos
+                        </label>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search|default:'' }}"
+                               placeholder="Buscar mazos, sets o descripciones..."
+                               class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
+                    </div>
+
+                    <!-- Filtro por Set -->
+                    <div>
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-folder mr-2 text-mystic-400"></i>
+                            Set
+                        </label>
+                        <select name="set" 
+                                class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-mystic-500/30 text-cosmic-100 focus:outline-none focus:border-mystic-400 focus:ring-1 focus:ring-mystic-400 transition-colors">
+                            <option value="">Todos los Sets</option>
+                            {% for set_option in sets_disponibles %}
+                                <option value="{{ set_option.pk }}" {% if set_filter == set_option.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ set_option.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Filtro por Precio -->
+                    <div>
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-gold-400"></i>
+                            Precio
+                        </label>
+                        <select name="precio" 
+                                class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-gold-500/30 text-cosmic-100 focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-colors">
+                            <option value="">Todos los Precios</option>
+                            <option value="bajo" {% if precio_filter == 'bajo' %}selected{% endif %}>Hasta $20</option>
+                            <option value="medio" {% if precio_filter == 'medio' %}selected{% endif %}>$20 - $50</option>
+                            <option value="alto" {% if precio_filter == 'alto' %}selected{% endif %}>Más de $50</option>
+                        </select>
+                    </div>
+
+                    <!-- Ordenamiento -->
+                    <div>
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-sort mr-2 text-cosmic-400"></i>
+                            Ordenar
+                        </label>
+                        <select name="orden" 
+                                class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-cosmic-500/30 text-cosmic-100 focus:outline-none focus:border-cosmic-400 focus:ring-1 focus:ring-cosmic-400 transition-colors">
+                            <option value="destacados" {% if orden == 'destacados' %}selected{% endif %}>Destacados</option>
+                            <option value="recientes" {% if orden == 'recientes' %}selected{% endif %}>Más Recientes</option>
+                            <option value="nombre" {% if orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+                            <option value="precio_asc" {% if orden == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+                            <option value="precio_desc" {% if orden == 'precio_desc' %}selected{% endif %}>Precio: Mayor a Menor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filtros adicionales -->
+                <div class="flex flex-wrap gap-4 mt-4 pt-4 border-t border-cosmic-600">
+                    <label class="flex items-center">
+                        <input type="checkbox" 
+                               name="ofertas" 
+                               value="1" 
+                               {% if request.GET.ofertas %}checked{% endif %}
+                               class="h-4 w-4 text-red-600 focus:ring-red-500 border-cosmic-300 rounded mr-2">
+                        <span class="text-cosmic-300 text-sm">
+                            <i class="fas fa-tags mr-1 text-red-400"></i>
+                            Solo ofertas
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-6 pt-4 border-t border-cosmic-600">
+                    <button type="submit" 
+                            class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-filter mr-2"></i>
+                        Aplicar Filtros
+                    </button>
+                    
+                    <button type="button" 
+                            onclick="clearFilters()"
+                            class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpiar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resultados -->
+        {% if page_obj %}
+            <div class="mb-6 flex items-center justify-between">
+                <p class="text-cosmic-300">
+                    Se encontraron <span class="text-primary-400 font-semibold">{{ total_productos }}</span> 
+                    producto{{ total_productos|pluralize }} 
+                    {% if search or set_filter or precio_filter %}
+                        que coinciden con tu búsqueda
+                    {% endif %}
+                </p>
+                {% if user.is_staff %}
+                    <a href="{% url 'tienda:admin_producto_create' %}" 
+                       class="bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 text-sm">
+                        <i class="fas fa-plus mr-1"></i>
+                        Agregar Producto
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Grid de Productos -->
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                {% for producto in page_obj %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                        <!-- Imagen del producto -->
+                        <div class="relative">
+                            {% if producto.mazo.imagen_reverso %}
+                                <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                     alt="{{ producto.mazo.nombre }}"
+                                     class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                            {% else %}
+                                <div class="w-full h-48 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
+                                    <i class="fas fa-cards-blank text-3xl text-cosmic-400"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Badges -->
+                            {% if producto.destacado %}
+                                <div class="absolute top-2 left-2 bg-gold-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    <i class="fas fa-star mr-1"></i>Destacado
+                                </div>
+                            {% endif %}
+                            
+                            {% if producto.tiene_descuento %}
+                                <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                    -{{ producto.porcentaje_descuento }}%
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Estado -->
+                            {% if producto.estado != 'activo' %}
+                                <div class="absolute bottom-2 left-2 bg-cosmic-900/80 text-cosmic-300 px-2 py-1 rounded text-xs">
+                                    {{ producto.get_estado_display }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="p-4">
+                            <!-- Header -->
+                            <div class="mb-3">
+                                <h3 class="text-lg font-mystical font-semibold text-primary-300 group-hover:text-primary-200 transition-colors mb-1">
+                                    {{ producto.mazo.nombre }}
+                                </h3>
+                                <div class="flex items-center justify-between text-xs text-cosmic-400">
+                                    <span class="bg-mystic-500/20 text-mystic-300 px-2 py-1 rounded">
+                                        {{ producto.mazo.set.nombre }}
+                                    </span>
+                                    <span>{{ producto.mazo.total_cartas }} cartas</span>
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            {% if producto.descripcion_adicional %}
+                                <p class="text-cosmic-300 text-sm mb-3 line-clamp-2">
+                                    {{ producto.descripcion_adicional|truncatewords:12 }}
+                                </p>
+                            {% endif %}
+
+                            <!-- Precio -->
+                            <div class="mb-4">
+                                {% if producto.tiene_descuento %}
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xl font-bold text-green-400">${{ producto.precio_actual }}</span>
+                                        <span class="text-sm text-cosmic-400 line-through">${{ producto.precio }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-xl font-bold text-gold-400">${{ producto.precio_actual }}</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="flex gap-2">
+                                <a href="{{ producto.link_compra }}" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
+                                    <i class="fas fa-shopping-cart mr-1"></i>
+                                    ${{ producto.precio_actual }}
+                                </a>
+                                <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                                   class="bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-2 px-3 rounded-lg transition-colors">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if user.is_staff %}
+                                    <a href="{% url 'tienda:admin_producto_detail' producto.pk %}" 
+                                       class="bg-gold-600 hover:bg-gold-500 text-white py-2 px-3 rounded-lg transition-colors">
+                                        <i class="fas fa-cog"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <div class="flex justify-center items-center space-x-2 mb-8">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium">
+                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Estado vacío -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-3xl text-cosmic-400"></i>
+                </div>
+                <h3 class="text-2xl font-mystical font-semibold text-cosmic-300 mb-4">
+                    No se encontraron productos
+                </h3>
+                <p class="text-cosmic-400 mb-8 max-w-md mx-auto">
+                    Intenta ajustar tus filtros de búsqueda o explora otras categorías
+                </p>
+                <button onclick="clearFilters()" 
+                        class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar Filtros
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function clearFilters() {
+        window.location.href = '{% url "tienda:producto_list" %}';
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit cuando cambian los selects
+        const selects = document.querySelectorAll('select[name="set"], select[name="precio"], select[name="orden"]');
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+        
+        // Auto-submit cuando cambia el checkbox
+        const checkbox = document.querySelector('input[name="ofertas"]');
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
