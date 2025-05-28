@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <img src="{% static 'img/icon.png' %}" alt="" class="mx-auto w-16 h-16 object-contain rounded-xl">
+            <h2 class="mt-6 text-3xl font-mystical font-bold text-primary-300">
+                Iniciar Sesión
+            </h2>
+            <p class="mt-2 text-sm text-cosmic-400">
+                Accede al cosmos de tu interior
+            </p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-envelope mr-2 text-primary-400"></i>
+                        Correo Electrónico
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.username.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-lock mr-2 text-primary-400"></i>
+                        Contraseña
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.password.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-300 text-sm">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Iniciar Sesión
+                    </button>
+                </div>
+
+                <!-- Links -->
+                <div class="flex items-center justify-between text-sm">
+                    <a href="{% url 'user:password_reset' %}" class="text-gold-400 hover:text-gold-300 transition-colors">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                    <a href="{% url 'user:register' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+                        Crear cuenta
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a href="{% url 'oraculo:index' %}" class="text-cosmic-400 hover:text-cosmic-200 transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

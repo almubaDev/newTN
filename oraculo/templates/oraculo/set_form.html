@@ -1,0 +1,218 @@
+<!-- oraculo/templates/oraculo/set_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% if set %}{% url 'oraculo:set_detail' set.pk %}{% else %}{% url 'oraculo:set_list' %}{% endif %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                    {{ title }}
+                </h1>
+            </div>
+            <p class="text-cosmic-400">
+                {% if set %}
+                    Modifica la información del set "{{ set.nombre }}"
+                {% else %}
+                    Completa la información para crear un nuevo set de cartas
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Form Container -->
+        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-400 mr-2"></i>
+                            <span class="font-semibold text-red-300">Error en el formulario</span>
+                        </div>
+                        <div class="mt-2 text-red-200 text-sm">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Nombre Field -->
+                <div>
+                    <label for="{{ form.nombre.id_for_label }}" 
+                           class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-tag mr-2 text-primary-400"></i>
+                        Nombre del Set
+                        <span class="text-red-400 ml-1">*</span>
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.nombre.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-cosmic-400">
+                        Nombre descriptivo para identificar el conjunto de mazos
+                    </p>
+                </div>
+
+                <!-- Código Field -->
+                <div>
+                    <label for="{{ form.codigo.id_for_label }}" 
+                           class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-barcode mr-2 text-gold-400"></i>
+                        Código Único
+                        <span class="text-red-400 ml-1">*</span>
+                    </label>
+                    {{ form.codigo }}
+                    {% if form.codigo.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.codigo.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-cosmic-400">
+                        Código alfanumérico único para identificar el set (ej: JDC2024)
+                    </p>
+                </div>
+
+                <!-- Descripción Field -->
+                <div>
+                    <label for="{{ form.descripcion.id_for_label }}" 
+                           class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-align-left mr-2 text-mystic-400"></i>
+                        Descripción
+                        <span class="text-red-400 ml-1">*</span>
+                    </label>
+                    {{ form.descripcion }}
+                    {% if form.descripcion.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.descripcion.errors %}
+                                <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-cosmic-400">
+                        Descripción detallada del propósito y contenido del set
+                    </p>
+                </div>
+
+                <!-- Required Fields Note -->
+                <div class="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-gold-400 mr-2"></i>
+                        <span class="text-gold-300 text-sm font-medium">Campos obligatorios</span>
+                    </div>
+                    <p class="text-gold-200 text-sm mt-1">
+                        Los campos marcados con <span class="text-red-400">*</span> son obligatorios
+                    </p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-cosmic-600">
+                    <button type="submit" 
+                            class="flex-1 bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>
+                        {{ action }} Set
+                    </button>
+                    
+                    <a href="{% if set %}{% url 'oraculo:set_detail' set.pk %}{% else %}{% url 'oraculo:set_list' %}{% endif %}" 
+                       class="flex-1 border-2 border-cosmic-500 text-cosmic-300 hover:bg-cosmic-500 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+
+            <!-- Preview Section (for edit mode) -->
+            {% if set %}
+                <div class="mt-8 pt-8 border-t border-cosmic-600">
+                    <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-4">
+                        <i class="fas fa-eye mr-2"></i>
+                        Información Actual
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-cosmic-800/50 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-cosmic-300 mb-2">Mazos Asociados</h4>
+                            <div class="text-2xl font-bold text-primary-400">{{ set.mazos.count }}</div>
+                            <p class="text-xs text-cosmic-400">
+                                mazo{{ set.mazos.count|pluralize }} en este set
+                            </p>
+                        </div>
+                        <div class="bg-cosmic-800/50 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-cosmic-300 mb-2">Fecha de Creación</h4>
+                            <div class="text-lg font-semibold text-mystic-400">
+                                {{ set.fecha_creacion|date:"d/m/Y" }}
+                            </div>
+                            <p class="text-xs text-cosmic-400">
+                                {{ set.fecha_creacion|timesince }} atrás
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if set.mazos.count > 0 %}
+                        <div class="mt-4">
+                            <div class="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-gold-400 mr-2"></i>
+                                    <span class="text-gold-300 text-sm font-medium">Atención</span>
+                                </div>
+                                <p class="text-gold-200 text-sm mt-1">
+                                    Cambiar el código del set puede afectar las referencias existentes
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-generate código from nombre if creating new set
+        {% if not set %}
+            const nombreField = document.getElementById('{{ form.nombre.id_for_label }}');
+            const codigoField = document.getElementById('{{ form.codigo.id_for_label }}');
+            
+            nombreField.addEventListener('input', function() {
+                if (!codigoField.value) {
+                    // Generate code from name: remove spaces, take first letters, add year
+                    let codigo = this.value
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase())
+                        .join('') + new Date().getFullYear();
+                    
+                    // Limit to 10 characters
+                    codigo = codigo.substring(0, 10);
+                    codigoField.value = codigo;
+                }
+            });
+        {% endif %}
+        
+        // Form validation feedback
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+            submitBtn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

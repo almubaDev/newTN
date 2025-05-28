@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Tarotnaútica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pulse-glow {
+        animation: pulseGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes pulseGlow {
+        from { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+        to { box-shadow: 0 0 40px rgba(217, 70, 239, 0.6); }
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #8b5cf6, #d946ef, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden pt-20 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <!-- Logo Principal -->
+                <div class="flex justify-center mb-8">
+                    <img src="{% static 'img/icon.png' %}" alt="" class="w-24 h-24 md:w-32 md:h-32 object-contain rounded-2xl">
+                </div>
+                
+                <!-- Título Principal -->
+                <h1 class="font-mystical text-5xl md:text-7xl font-bold mb-6 text-gradient">
+                    Tarotnaútica
+                </h1>
+                <p class="text-xl md:text-2xl text-cosmic-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                    Navega las profundidades de tu alma a través de la sabiduría ancestral conectada con la tecnología cósmica
+                </p>
+                
+                <!-- CTA Principal -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                    <button class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 transform hover:scale-105 pulse-glow w-56 h-14 flex items-center justify-center">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Iniciar Consulta
+                    </button>
+                    <a href="{% url 'oraculo:motor_nautica' %}" class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-6 py-4 rounded-full font-semibold text-sm transition-all duration-300 w-56 h-14 flex items-center justify-center">
+                        <i class="fas fa-cog mr-2"></i>
+                        Motor Náutica
+                    </a>
+                    <button class="border-2 border-mystic-500 text-mystic-400 hover:bg-mystic-500 hover:text-cosmic-900 px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 w-56 h-14 flex items-center justify-center">
+                        <i class="fas fa-store mr-2"></i>
+                        Tienda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Efecto de partículas en movimiento
+    function createCosmicParticles() {
+        const particles = document.createElement('div');
+        particles.className = 'fixed inset-0 pointer-events-none z-0';
+        
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'absolute bg-primary-400 rounded-full opacity-20';
+            particle.style.width = Math.random() * 4 + 2 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animation = `float ${Math.random() * 10 + 5}s ease-in-out infinite`;
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            particles.appendChild(particle);
+        }
+        
+        document.body.appendChild(particles);
+    }
+    
+    // Inicializar efectos
+    document.addEventListener('DOMContentLoaded', function() {
+        createCosmicParticles();
+        
+        // Smooth scroll para los botones
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Aquí puedes agregar la lógica específica para cada botón
+                console.log('Botón clickeado:', this.textContent.trim());
+            });
+        });
+    });
+</script>
+{% endblock %}

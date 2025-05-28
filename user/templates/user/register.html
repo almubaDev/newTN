@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <img src="{% static 'img/icon.png' %}" alt="" class="mx-auto w-16 h-16 object-contain rounded-xl">
+            <h2 class="mt-6 text-3xl font-mystical font-bold text-primary-300">
+                Crear Cuenta
+            </h2>
+            <p class="mt-2 text-sm text-cosmic-400">
+                Únete al viaje cósmico interior
+            </p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-envelope mr-2 text-primary-400"></i>
+                        Correo Electrónico
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.email.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Name Field -->
+                <div>
+                    <label for="{{ form.nombre.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-user mr-2 text-mystic-400"></i>
+                        Nombre Completo
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.nombre.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password1 Field -->
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-lock mr-2 text-gold-400"></i>
+                        Contraseña
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.password1.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password2 Field -->
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-cosmic-200 mb-2">
+                        <i class="fas fa-lock mr-2 text-gold-400"></i>
+                        Confirmar Contraseña
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.password2.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-300 text-sm">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Benefit Info -->
+                <div class="bg-gold-500/20 border border-gold-500/50 rounded-lg p-4 text-gold-200 text-sm">
+                    <div class="flex items-center">
+                        <i class="fas fa-gift mr-2 text-gold-400"></i>
+                        <span class="font-semibold">¡Regalo de Bienvenida!</span>
+                    </div>
+                    <p class="mt-1">Recibe 5 créditos gratis para comenzar tu viaje cósmico.</p>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-mystic-500 to-gold-500 hover:from-mystic-600 hover:to-gold-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Crear Cuenta
+                    </button>
+                </div>
+
+                <!-- Links -->
+                <div class="text-center text-sm">
+                    <span class="text-cosmic-400">¿Ya tienes cuenta?</span>
+                    <a href="{% url 'user:login' %}" class="text-primary-400 hover:text-primary-300 transition-colors ml-1">
+                        Iniciar sesión
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a href="{% url 'oraculo:index' %}" class="text-cosmic-400 hover:text-cosmic-200 transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}">
+                        Iniciar sesión
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a href="{% url 'oraculo:index' %}" class="text-cosmic-400 hover:text-cosmic-200 transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

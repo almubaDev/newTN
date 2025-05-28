@@ -1,0 +1,211 @@
+<!-- oraculo/templates/oraculo/set_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center mb-4">
+                        <a href="{% url 'oraculo:set_list' %}" 
+                           class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                            {{ set.nombre }}
+                        </h1>
+                    </div>
+                    <div class="flex items-center space-x-4 mb-4">
+                        <span class="bg-gold-500/20 text-gold-300 px-3 py-1 rounded-full text-sm font-mono">
+                            {{ set.codigo }}
+                        </span>
+                        <span class="bg-mystic-500/20 text-mystic-300 px-3 py-1 rounded-full text-sm">
+                            {{ mazos.count }} mazo{{ mazos.count|pluralize }}
+                        </span>
+                        <span class="text-cosmic-400 text-sm">
+                            <i class="fas fa-calendar mr-1"></i>
+                            Creado {{ set.fecha_creacion|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    <p class="text-cosmic-300 leading-relaxed max-w-3xl">
+                        {{ set.descripcion }}
+                    </p>
+                </div>
+                
+                <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3">
+                    <a href="{% url 'oraculo:set_update' set.pk %}" 
+                       class="bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                        <i class="fas fa-edit mr-2"></i>
+                        Editar Set
+                    </a>
+                    <a href="{% url 'oraculo:mazo_create' %}?set={{ set.pk }}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Mazo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Set Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-primary-500/20 text-center">
+                <div class="text-2xl font-bold text-primary-300 mb-1">{{ mazos.count }}</div>
+                <div class="text-sm text-cosmic-400">Mazos</div>
+            </div>
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-mystic-500/20 text-center">
+                <div class="text-2xl font-bold text-mystic-300 mb-1">
+                    {% widthratio mazos|length 1 1 as total_mazos %}
+                    {% if total_mazos > 0 %}
+                        {{ set.mazos.all|length }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </div>
+                <div class="text-sm text-cosmic-400">Total Cartas</div>
+            </div>
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-gold-500/20 text-center">
+                <div class="text-2xl font-bold text-gold-300 mb-1">{{ set.fecha_creacion|date:"Y" }}</div>
+                <div class="text-sm text-cosmic-400">Año</div>
+            </div>
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-green-500/20 text-center">
+                <div class="text-2xl font-bold text-green-300 mb-1">
+                    {% if set.fecha_actualizacion %}
+                        {{ set.fecha_actualizacion|timesince }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+                <div class="text-sm text-cosmic-400">Última Act.</div>
+            </div>
+        </div>
+
+        <!-- Mazos Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-mystical font-semibold text-primary-300">
+                    Mazos del Set
+                </h2>
+                {% if mazos %}
+                    <span class="text-cosmic-400 text-sm">
+                        {{ mazos.count }} mazo{{ mazos.count|pluralize }} encontrado{{ mazos.count|pluralize }}
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if mazos %}
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for mazo in mazos %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                            <!-- Mazo Image -->
+                            {% if mazo.imagen_reverso %}
+                                <div class="aspect-w-16 aspect-h-10 bg-cosmic-800">
+                                    <img src="{{ mazo.imagen_reverso.url }}" 
+                                         alt="{{ mazo.nombre }}"
+                                         class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300">
+                                </div>
+                            {% else %}
+                                <div class="h-32 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
+                                    <i class="fas fa-cards-blank text-3xl text-cosmic-400"></i>
+                                </div>
+                            {% endif %}
+
+                            <!-- Mazo Content -->
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-3">
+                                    <h3 class="text-lg font-mystical font-semibold text-primary-300 group-hover:text-primary-200 transition-colors">
+                                        {{ mazo.nombre }}
+                                    </h3>
+                                    <span class="bg-gold-500/20 text-gold-300 px-2 py-1 rounded text-xs font-mono">
+                                        {{ mazo.codigo }}
+                                    </span>
+                                </div>
+
+                                <p class="text-cosmic-300 text-sm mb-4 line-clamp-2">
+                                    {{ mazo.descripcion|truncatewords:15 }}
+                                </p>
+
+                                <div class="flex items-center justify-between text-xs text-cosmic-400 mb-4">
+                                    <span>
+                                        <i class="fas fa-layer-group mr-1"></i>
+                                        {{ mazo.total_cartas }} carta{{ mazo.total_cartas|pluralize }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        {{ mazo.fecha_creacion|date:"d/m/Y" }}
+                                    </span>
+                                </div>
+
+                                <!-- Mazo Actions -->
+                                <div class="flex items-center justify-between">
+                                    <a href="{% url 'oraculo:mazo_detail' mazo.pk %}" 
+                                       class="text-primary-400 hover:text-primary-300 font-medium transition-colors text-sm">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        Ver Mazo
+                                    </a>
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'oraculo:carta_create' %}?mazo={{ mazo.pk }}" 
+                                           class="text-green-400 hover:text-green-300 transition-colors p-1"
+                                           title="Agregar carta">
+                                            <i class="fas fa-plus text-sm"></i>
+                                        </a>
+                                        <a href="{% url 'oraculo:mazo_update' mazo.pk %}" 
+                                           class="text-gold-400 hover:text-gold-300 transition-colors p-1"
+                                           title="Editar mazo">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </a>
+                                        <a href="{% url 'oraculo:mazo_delete' mazo.pk %}" 
+                                           class="text-red-400 hover:text-red-300 transition-colors p-1"
+                                           title="Eliminar mazo">
+                                            <i class="fas fa-trash text-sm"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State for Mazos -->
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-cards-blank text-2xl text-cosmic-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-cosmic-300 mb-2">
+                        No hay mazos en este set
+                    </h3>
+                    <p class="text-cosmic-400 mb-6">
+                        Agrega el primer mazo para comenzar a organizar las cartas
+                    </p>
+                    <a href="{% url 'oraculo:mazo_create' %}?set={{ set.pk }}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Crear Primer Mazo
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="mt-12 p-6 bg-red-500/10 border border-red-500/30 rounded-xl">
+            <h3 class="text-lg font-semibold text-red-300 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Zona de Peligro
+            </h3>
+            <p class="text-red-200 text-sm mb-4">
+                Eliminar este set también eliminará todos los mazos y cartas asociados. Esta acción no se puede deshacer.
+            </p>
+            <a href="{% url 'oraculo:set_delete' set.pk %}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm inline-flex items-center">
+                <i class="fas fa-trash mr-2"></i>
+                Eliminar Set
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

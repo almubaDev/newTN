@@ -1,0 +1,182 @@
+<!-- oraculo/templates/oraculo/set_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300 mb-2">
+                        Gestión de Sets
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Administra los conjuntos de mazos de cartas
+                    </p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <a href="{% url 'oraculo:set_create' %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Crear Nuevo Set
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <form method="GET" class="max-w-md">
+                <div class="relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search|default:'' }}"
+                           placeholder="Buscar sets..."
+                           class="w-full px-4 py-3 pl-10 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-cosmic-400"></i>
+                    </div>
+                    <button type="submit" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <i class="fas fa-arrow-right text-primary-400 hover:text-primary-300"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sets Grid -->
+        {% if page_obj %}
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {% for set in page_obj %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                        <!-- Set Header -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-mystical font-semibold text-primary-300 group-hover:text-primary-200 transition-colors">
+                                    {{ set.nombre }}
+                                </h3>
+                                <p class="text-sm text-gold-400 font-mono">
+                                    {{ set.codigo }}
+                                </p>
+                            </div>
+                            <div class="ml-4">
+                                <span class="bg-mystic-500/20 text-mystic-300 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ set.mazos.count }} mazo{{ set.mazos.count|pluralize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-cosmic-300 text-sm mb-4 line-clamp-3">
+                            {{ set.descripcion|truncatewords:20 }}
+                        </p>
+
+                        <!-- Metadata -->
+                        <div class="flex items-center justify-between text-xs text-cosmic-400 mb-4">
+                            <span>
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ set.fecha_creacion|date:"d/m/Y" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ set.fecha_actualizacion|date:"d/m/Y" }}
+                            </span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center justify-between">
+                            <a href="{% url 'oraculo:set_detail' set.pk %}" 
+                               class="text-primary-400 hover:text-primary-300 font-medium transition-colors">
+                                <i class="fas fa-eye mr-1"></i>
+                                Ver Detalle
+                            </a>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'oraculo:set_update' set.pk %}" 
+                                   class="text-gold-400 hover:text-gold-300 transition-colors p-2">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'oraculo:set_delete' set.pk %}" 
+                                   class="text-red-400 hover:text-red-300 transition-colors p-2">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="flex justify-center items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if search %}&search={{ search }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium">
+                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-folder-open text-3xl text-cosmic-400"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-cosmic-300 mb-2">
+                    {% if search %}
+                        No se encontraron sets
+                    {% else %}
+                        No hay sets creados aún
+                    {% endif %}
+                </h3>
+                <p class="text-cosmic-400 mb-6">
+                    {% if search %}
+                        Intenta con otros términos de búsqueda
+                    {% else %}
+                        Crea tu primer set para comenzar
+                    {% endif %}
+                </p>
+                {% if not search %}
+                    <a href="{% url 'oraculo:set_create' %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Crear Primer Set
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Back to Dashboard -->
+        <div class="mt-8 text-center">
+            <a href="{% url 'oraculo:index' %}" 
+               class="text-cosmic-400 hover:text-cosmic-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

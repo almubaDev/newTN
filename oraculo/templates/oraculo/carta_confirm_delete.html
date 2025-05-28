@@ -1,0 +1,292 @@
+<!-- oraculo/templates/oraculo/carta_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'oraculo:carta_detail' carta.pk %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-mystical font-bold text-red-300">
+                    Eliminar Carta
+                </h1>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Warning Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-red-500/10 backdrop-blur-sm rounded-2xl p-8 border border-red-500/30">
+                    <!-- Alert Icon -->
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+                        </div>
+                        <h2 class="text-2xl font-mystical font-bold text-red-300 mb-2">
+                            ¿Confirmar eliminación?
+                        </h2>
+                        <p class="text-red-200">
+                            Esta acción eliminará la carta permanentemente
+                        </p>
+                    </div>
+
+                    <!-- Impact Warning -->
+                    <div class="bg-red-600/20 border border-red-500/50 rounded-lg p-6 mb-6">
+                        <h4 class="text-red-300 font-semibold mb-4 flex items-center">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            Lo que se eliminará
+                        </h4>
+                        <ul class="space-y-3 text-red-200">
+                            <li class="flex items-start">
+                                <i class="fas fa-minus-circle text-red-400 mr-3 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold">Carta completa:</span>
+                                    <span class="block text-sm text-red-300">
+                                        "#{{ carta.numero }} - {{ carta.nombre }}"
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-minus-circle text-red-400 mr-3 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold">Imagen de la carta:</span>
+                                    <span class="block text-sm text-red-300">
+                                        La imagen asociada se eliminará del servidor
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-minus-circle text-red-400 mr-3 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold">Significados:</span>
+                                    <span class="block text-sm text-red-300">
+                                        Significado normal e invertido se perderán
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-minus-circle text-red-400 mr-3 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold">Posición en el mazo:</span>
+                                    <span class="block text-sm text-red-300">
+                                        Se liberará el número {{ carta.numero }} en el mazo
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Alternative Actions -->
+                    <div class="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4 mb-6">
+                        <h4 class="text-gold-300 font-semibold mb-3 flex items-center">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            ¿Has considerado estas alternativas?
+                        </h4>
+                        <ul class="space-y-2 text-gold-200 text-sm">
+                            <li class="flex items-center">
+                                <i class="fas fa-edit text-gold-400 mr-2 text-xs"></i>
+                                <span>Editar la carta en lugar de eliminarla</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-exchange-alt text-gold-400 mr-2 text-xs"></i>
+                                <span>Cambiar la carta a otro mazo</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-hashtag text-gold-400 mr-2 text-xs"></i>
+                                <span>Cambiar solo el número de la carta</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-download text-gold-400 mr-2 text-xs"></i>
+                                <span>Descargar la imagen antes de eliminar</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        
+                        <!-- Confirmation Checkbox -->
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" 
+                                   id="confirm-delete" 
+                                   class="mt-1 h-4 w-4 text-red-500 border-red-400 rounded focus:ring-red-500 focus:ring-offset-cosmic-800"
+                                   required>
+                            <label for="confirm-delete" class="text-red-200 text-sm">
+                                Entiendo que esta acción eliminará permanentemente la carta 
+                                "<strong>#{{ carta.numero }} - {{ carta.nombre }}</strong>" 
+                                y toda su información asociada.
+                            </label>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-red-500/30">
+                            <button type="submit" 
+                                    id="delete-btn"
+                                    disabled
+                                    class="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                                <i class="fas fa-trash mr-2"></i>
+                                Eliminar Carta
+                            </button>
+                            
+                            <a href="{% url 'oraculo:carta_detail' carta.pk %}" 
+                               class="flex-1 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Carta Info Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-red-500/20 sticky top-8">
+                    <!-- Card Image -->
+                    <div class="mb-6">
+                        {% if carta.imagen %}
+                            <img src="{{ carta.imagen.url }}" 
+                                 alt="{{ carta.nombre }}"
+                                 class="w-full aspect-[3/4] object-cover rounded-xl border-2 border-red-500/30 opacity-75">
+                        {% else %}
+                            <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-red-500/30 flex items-center justify-center opacity-75">
+                                <i class="fas fa-image text-3xl text-cosmic-400"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Details -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Número:</span>
+                            <span class="text-red-200 font-bold">#{{ carta.numero }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Nombre:</span>
+                            <span class="text-red-200 font-semibold text-right">{{ carta.nombre }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Mazo:</span>
+                            <span class="text-red-200 text-right">{{ carta.mazo.nombre }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Set:</span>
+                            <span class="text-red-200 text-right">{{ carta.mazo.set.nombre }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-300 font-medium">Posición:</span>
+                            <span class="text-red-200">{{ carta.numero }}/{{ carta.mazo.total_cartas }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-cosmic-300 font-medium">Creada:</span>
+                            <span class="text-red-200">{{ carta.fecha_creacion|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Preview of meanings -->
+                    <div class="mt-6 space-y-3">
+                        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                            <h4 class="text-green-300 text-sm font-semibold mb-1">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                Significado Normal
+                            </h4>
+                            <p class="text-green-200 text-xs line-clamp-2">
+                                {{ carta.significado_normal|truncatewords:15 }}
+                            </p>
+                        </div>
+                        
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                            <h4 class="text-red-300 text-sm font-semibold mb-1">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                Significado Invertido
+                            </h4>
+                            <p class="text-red-200 text-xs line-clamp-2">
+                                {{ carta.significado_invertido|truncatewords:15 }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Warning Box -->
+                    <div class="mt-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-skull-crossbones text-red-400 mr-2"></i>
+                            <span class="text-red-300 text-sm font-semibold">Eliminación Permanente</span>
+                        </div>
+                        <p class="text-red-200 text-xs mt-1">
+                            Una vez eliminada, no podrás recuperar esta carta ni su información.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Note -->
+        <div class="mt-8 text-center">
+            <p class="text-cosmic-400 text-sm">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Consejo: Descarga la imagen de la carta antes de eliminarla si planeas reutilizarla
+            </p>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('confirm-delete');
+        const deleteBtn = document.getElementById('delete-btn');
+        
+        // Enable/disable delete button based on checkbox
+        checkbox.addEventListener('change', function() {
+            deleteBtn.disabled = !this.checked;
+            
+            if (this.checked) {
+                deleteBtn.classList.remove('disabled:bg-cosmic-600', 'disabled:cursor-not-allowed');
+                deleteBtn.classList.add('hover:bg-red-700');
+            } else {
+                deleteBtn.classList.add('disabled:bg-cosmic-600', 'disabled:cursor-not-allowed');
+                deleteBtn.classList.remove('hover:bg-red-700');
+            }
+        });
+        
+        // Form submission with loading state
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (checkbox.checked) {
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Eliminando...';
+                deleteBtn.disabled = true;
+            }
+        });
+        
+        // Download image before deletion
+        {% if carta.imagen %}
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.href = '{{ carta.imagen.url }}';
+            link.download = '{{ carta.numero }}_{{ carta.nombre|slugify }}.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Add download button to the form
+        const downloadBtn = document.createElement('button');
+        downloadBtn.type = 'button';
+        downloadBtn.className = 'text-gold-400 hover:text-gold-300 text-sm transition-colors mt-2';
+        downloadBtn.innerHTML = '<i class="fas fa-download mr-1"></i>Descargar imagen antes de eliminar';
+        downloadBtn.onclick = downloadImage;
+        
+        const warningBox = document.querySelector('.bg-red-500\\/20');
+        warningBox.appendChild(downloadBtn);
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}

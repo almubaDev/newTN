@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-mystical font-bold text-primary-300 mb-4">
+                Mi Perfil Cósmico
+            </h1>
+            <p class="text-xl text-cosmic-400">
+                Gestiona tu cuenta y créditos
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- User Info Card -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-mystic-500 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-mystical font-semibold text-primary-300">
+                            {{ user.nombre }}
+                        </h2>
+                        <p class="text-cosmic-400">{{ user.email }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-cosmic-600">
+                        <span class="text-cosmic-300">Fecha de registro:</span>
+                        <span class="text-cosmic-100">{{ user.date_joined|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b border-cosmic-600">
+                        <span class="text-cosmic-300">Estado de cuenta:</span>
+                        <span class="text-green-400 font-semibold">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Activa
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credits Card -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-gold-500/20">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-gold-500 to-mystic-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-coins text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-mystical font-semibold text-gold-300 mb-2">
+                        Créditos Disponibles
+                    </h3>
+                    <div class="text-4xl font-bold text-gold-400 mb-2">
+                        {{ user.creditos_disponibles }}
+                    </div>
+                    <p class="text-cosmic-400 text-sm">
+                        Créditos para consultas y servicios
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <button class="w-full bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300">
+                        <i class="fas fa-plus mr-2"></i>
+                        Comprar Créditos
+                    </button>
+                    <button class="w-full border-2 border-mystic-500 text-mystic-400 hover:bg-mystic-500 hover:text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300">
+                        <i class="fas fa-history mr-2"></i>
+                        Historial de Uso
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="mt-12">
+            <h3 class="text-2xl font-mystical font-semibold text-primary-300 mb-6 text-center">
+                Configuración de Cuenta
+            </h3>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Change Password -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-mystic-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-key text-white"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-primary-300 mb-2">Cambiar Contraseña</h4>
+                    <p class="text-cosmic-400 text-sm mb-4">Actualiza tu contraseña de acceso</p>
+                    <a href="{% url 'user:password_change' %}" class="inline-block bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        Cambiar
+                    </a>
+                </div>
+
+                <!-- Logout -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-mystic-500/20 text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-mystic-500 to-gold-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-sign-out-alt text-white"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-mystic-300 mb-2">Cerrar Sesión</h4>
+                    <p class="text-cosmic-400 text-sm mb-4">Salir de tu cuenta actual</p>
+                    <a href="{% url 'user:logout' %}" class="inline-block bg-mystic-500 hover:bg-mystic-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        Salir
+                    </a>
+                </div>
+
+                <!-- Back Home -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gold-500/20 text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-gold-500 to-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-home text-white"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gold-300 mb-2">Volver al Inicio</h4>
+                    <p class="text-cosmic-400 text-sm mb-4">Regresar al dashboard principal</p>
+                    <a href="{% url 'oraculo:index' %}" class="inline-block bg-gold-500 hover:bg-gold-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

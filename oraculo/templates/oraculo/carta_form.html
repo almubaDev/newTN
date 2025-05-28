@@ -1,0 +1,376 @@
+<!-- oraculo/templates/oraculo/carta_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% if carta %}{% url 'oraculo:carta_detail' carta.pk %}{% else %}{% url 'oraculo:mazo_detail' request.GET.mazo %}{% endif %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                    {{ title }}
+                </h1>
+            </div>
+            <p class="text-cosmic-400">
+                {% if carta %}
+                    Modifica la información de la carta "{{ carta.nombre }}"
+                {% else %}
+                    Completa la información para crear una nueva carta
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Form Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+                    <form method="post" enctype="multipart/form-data" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-circle text-red-400 mr-2"></i>
+                                    <span class="font-semibold text-red-300">Error en el formulario</span>
+                                </div>
+                                <div class="mt-2 text-red-200 text-sm">
+                                    {% for error in form.non_field_errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Número y Nombre -->
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <!-- Número Field -->
+                            <div>
+                                <label for="{{ form.numero.id_for_label }}" 
+                                       class="block text-sm font-medium text-cosmic-200 mb-2">
+                                    <i class="fas fa-hashtag mr-2 text-gold-400"></i>
+                                    Número de la Carta
+                                    <span class="text-red-400 ml-1">*</span>
+                                </label>
+                                {{ form.numero }}
+                                {% if form.numero.errors %}
+                                    <div class="mt-1 text-sm text-red-400">
+                                        {% for error in form.numero.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-cosmic-400">
+                                    Número único dentro del mazo (ejemplo: 1, 2, 3...)
+                                </p>
+                            </div>
+
+                            <!-- Nombre Field -->
+                            <div>
+                                <label for="{{ form.nombre.id_for_label }}" 
+                                       class="block text-sm font-medium text-cosmic-200 mb-2">
+                                    <i class="fas fa-tag mr-2 text-primary-400"></i>
+                                    Nombre de la Carta
+                                    <span class="text-red-400 ml-1">*</span>
+                                </label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                    <div class="mt-1 text-sm text-red-400">
+                                        {% for error in form.nombre.errors %}
+                                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-cosmic-400">
+                                    Nombre descriptivo de la carta
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mazo Field -->
+                        <div>
+                            <label for="{{ form.mazo.id_for_label }}" 
+                                   class="block text-sm font-medium text-cosmic-200 mb-2">
+                                <i class="fas fa-cards-blank mr-2 text-mystic-400"></i>
+                                Mazo al que pertenece
+                                <span class="text-red-400 ml-1">*</span>
+                            </label>
+                            {{ form.mazo }}
+                            {% if form.mazo.errors %}
+                                <div class="mt-1 text-sm text-red-400">
+                                    {% for error in form.mazo.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-cosmic-400">
+                                Selecciona el mazo donde se incluirá esta carta
+                            </p>
+                        </div>
+
+                        <!-- Imagen Field -->
+                        <div>
+                            <label for="{{ form.imagen.id_for_label }}" 
+                                   class="block text-sm font-medium text-cosmic-200 mb-2">
+                                <i class="fas fa-image mr-2 text-gold-400"></i>
+                                Imagen de la Carta
+                                <span class="text-red-400 ml-1">*</span>
+                            </label>
+                            
+                            <!-- Current Image Preview (Edit mode) -->
+                            {% if carta and carta.imagen %}
+                                <div class="mb-4 p-4 bg-cosmic-800/50 rounded-lg border border-gold-500/20">
+                                    <p class="text-sm text-cosmic-300 mb-2">Imagen actual:</p>
+                                    <img src="{{ carta.imagen.url }}" 
+                                         alt="Imagen actual"
+                                         class="w-32 h-40 object-cover rounded-lg border border-gold-500/30">
+                                </div>
+                            {% endif %}
+                            
+                            {{ form.imagen }}
+                            {% if form.imagen.errors %}
+                                <div class="mt-1 text-sm text-red-400">
+                                    {% for error in form.imagen.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-cosmic-400">
+                                Imagen frontal de la carta (JPG, PNG, WebP - Max: 5MB)
+                            </p>
+                        </div>
+
+                        <!-- Significado Normal Field -->
+                        <div>
+                            <label for="{{ form.significado_normal.id_for_label }}" 
+                                   class="block text-sm font-medium text-cosmic-200 mb-2">
+                                <i class="fas fa-arrow-up mr-2 text-green-400"></i>
+                                Significado Normal
+                                <span class="text-red-400 ml-1">*</span>
+                            </label>
+                            {{ form.significado_normal }}
+                            {% if form.significado_normal.errors %}
+                                <div class="mt-1 text-sm text-red-400">
+                                    {% for error in form.significado_normal.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-cosmic-400">
+                                Interpretación cuando la carta aparece en posición normal
+                            </p>
+                        </div>
+
+                        <!-- Significado Invertido Field -->
+                        <div>
+                            <label for="{{ form.significado_invertido.id_for_label }}" 
+                                   class="block text-sm font-medium text-cosmic-200 mb-2">
+                                <i class="fas fa-arrow-down mr-2 text-red-400"></i>
+                                Significado Invertido
+                                <span class="text-red-400 ml-1">*</span>
+                            </label>
+                            {{ form.significado_invertido }}
+                            {% if form.significado_invertido.errors %}
+                                <div class="mt-1 text-sm text-red-400">
+                                    {% for error in form.significado_invertido.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-cosmic-400">
+                                Interpretación cuando la carta aparece invertida o bloqueada
+                            </p>
+                        </div>
+
+                        <!-- Required Fields Note -->
+                        <div class="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle text-gold-400 mr-2"></i>
+                                <span class="text-gold-300 text-sm font-medium">Campos obligatorios</span>
+                            </div>
+                            <p class="text-gold-200 text-sm mt-1">
+                                Los campos marcados con <span class="text-red-400">*</span> son obligatorios
+                            </p>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-cosmic-600">
+                            <button type="submit" 
+                                    class="flex-1 bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                                <i class="fas fa-save mr-2"></i>
+                                {{ action }} Carta
+                            </button>
+                            
+                            <a href="{% if carta %}{% url 'oraculo:carta_detail' carta.pk %}{% else %}{% url 'oraculo:mazo_detail' request.GET.mazo %}{% endif %}" 
+                               class="flex-1 border-2 border-cosmic-500 text-cosmic-300 hover:bg-cosmic-500 hover:text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                                <i class="fas fa-times mr-2"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-mystic-500/20 sticky top-8">
+                    <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        {% if carta %}Información Actual{% else %}Información de la Carta{% endif %}
+                    </h3>
+
+                    {% if carta %}
+                        <!-- Edit Mode - Current Info -->
+                        <div class="space-y-4">
+                            <div class="bg-cosmic-800/50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-cosmic-300 mb-2">Posición Actual</h4>
+                                <div class="text-2xl font-bold text-primary-400">#{{ carta.numero }}</div>
+                                <p class="text-xs text-cosmic-400">
+                                    de {{ carta.mazo.total_cartas }} en el mazo
+                                </p>
+                            </div>
+                            
+                            <div class="bg-cosmic-800/50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-cosmic-300 mb-2">Mazo Actual</h4>
+                                <div class="text-lg font-semibold text-mystic-400">{{ carta.mazo.nombre }}</div>
+                                <p class="text-xs text-cosmic-400">{{ carta.mazo.codigo }}</p>
+                            </div>
+                            
+                            <div class="bg-cosmic-800/50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-cosmic-300 mb-2">Fechas</h4>
+                                <div class="text-sm text-gold-400">
+                                    Creada: {{ carta.fecha_creacion|date:"d/m/Y" }}
+                                </div>
+                                <div class="text-sm text-cosmic-400">
+                                    Actualizada: {{ carta.fecha_actualizacion|timesince }} atrás
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Create Mode - Tips -->
+                        <div class="space-y-4">
+                            <div class="bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
+                                <h4 class="text-primary-300 text-sm font-semibold mb-2">
+                                    <i class="fas fa-lightbulb mr-1"></i>
+                                    Consejos para la Carta
+                                </h4>
+                                <ul class="text-primary-200 text-xs space-y-1">
+                                    <li>• El número debe ser único en el mazo</li>
+                                    <li>• Usa nombres descriptivos y evocadores</li>
+                                    <li>• La imagen debe ser clara y simbólica</li>
+                                    <li>• Los significados deben ser complementarios</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                                <h4 class="text-green-300 text-sm font-semibold mb-2">
+                                    <i class="fas fa-arrow-up mr-1"></i>
+                                    Significado Normal
+                                </h4>
+                                <ul class="text-green-200 text-xs space-y-1">
+                                    <li>• Aspectos positivos y fluidos</li>
+                                    <li>• Energía en movimiento</li>
+                                    <li>• Mensaje directo y claro</li>
+                                    <li>• Potencial activado</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                                <h4 class="text-red-300 text-sm font-semibold mb-2">
+                                    <i class="fas fa-arrow-down mr-1"></i>
+                                    Significado Invertido
+                                </h4>
+                                <ul class="text-red-200 text-xs space-y-1">
+                                    <li>• Aspectos bloqueados o distorsionados</li>
+                                    <li>• Lecciones por aprender</li>
+                                    <li>• Necesidad de reflexión</li>
+                                    <li>• Energía que requiere trabajo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Quick Actions -->
+                    <div class="mt-6 pt-4 border-t border-cosmic-600">
+                        <h4 class="text-sm font-medium text-cosmic-300 mb-3">Acciones Rápidas</h4>
+                        <div class="space-y-2 text-sm">
+                            <a href="{% url 'oraculo:mazo_list' %}" 
+                               class="block text-primary-400 hover:text-primary-300 transition-colors">
+                                <i class="fas fa-cards-blank mr-2"></i>
+                                Ver todos los mazos
+                            </a>
+                            {% if not carta %}
+                                <a href="{% url 'oraculo:mazo_create' %}" 
+                                   class="block text-mystic-400 hover:text-mystic-300 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Crear nuevo mazo
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation feedback
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+            submitBtn.disabled = true;
+        });
+        
+        // Image preview
+        const imageInput = document.getElementById('{{ form.imagen.id_for_label }}');
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Create or update preview
+                    let preview = document.getElementById('image-preview');
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.id = 'image-preview';
+                        preview.className = 'mt-4 p-4 bg-cosmic-800/50 rounded-lg border border-gold-500/20';
+                        imageInput.parentNode.appendChild(preview);
+                    }
+                    preview.innerHTML = `
+                        <p class="text-sm text-cosmic-300 mb-2">Vista previa:</p>
+                        <img src="${e.target.result}" class="w-32 h-40 object-cover rounded-lg border border-gold-500/30">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Auto-suggest next number
+        {% if not carta %}
+        const numeroField = document.getElementById('{{ form.numero.id_for_label }}');
+        const mazoField = document.getElementById('{{ form.mazo.id_for_label }}');
+        
+        mazoField.addEventListener('change', function() {
+            if (this.value && !numeroField.value) {
+                // Suggest next available number
+                // This could be enhanced with an AJAX call to check existing numbers
+                const maxNumber = parseInt(this.options[this.selectedIndex].text.match(/\d+/)) || 0;
+                numeroField.value = maxNumber + 1;
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}
