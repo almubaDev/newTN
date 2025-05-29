@@ -6,314 +6,394 @@
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20">
-    <!-- Hero Section -->
-    <section class="pt-24 pb-16">
+    <!-- Hero Section Compacto -->
+    <section class="pt-20 pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl md:text-6xl font-mystical font-bold text-primary-300 mb-4">
+            <h1 class="text-3xl md:text-5xl font-mystical font-bold text-primary-300 mb-3">
                 Tienda Tarotnaútica
             </h1>
-            <p class="text-xl text-cosmic-400 mb-8 max-w-3xl mx-auto">
-                Descubre mazos únicos y conecta con la sabiduría ancestral a través de nuestros oráculos cuidadosamente seleccionados
+            <p class="text-lg text-cosmic-400 mb-6 max-w-2xl mx-auto">
+                Descubre mazos únicos y conecta con la sabiduría ancestral
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{% url 'tienda:producto_list' %}" 
-                   class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+        </div>
+    </section>
+
+    <!-- Navbar Secundaria de Filtros por Categoría -->
+    <section class="py-4 bg-cosmic-800/50 border-y border-primary-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <a href="?categoria=todos" 
+                   class="px-6 py-3 rounded-lg font-semibold transition-all duration-300 {% if not request.GET.categoria or request.GET.categoria == 'todos' %}bg-primary-500 text-white{% else %}text-primary-400 hover:text-primary-300 hover:bg-primary-500/20{% endif %}">
                     <i class="fas fa-store mr-2"></i>
-                    Ver Catálogo
+                    Productos Disponibles
                 </a>
-                {% if user.is_staff %}
-                    <a href="{% url 'tienda:admin_producto_list' %}" 
-                       class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
-                        <i class="fas fa-cog mr-2"></i>
-                        Administrar
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="py-12 bg-cosmic-800/30">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-primary-400 mb-2">{{ total_productos }}</div>
-                    <div class="text-sm text-cosmic-400">Productos Disponibles</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-mystic-400 mb-2">{{ productos_destacados.count }}</div>
-                    <div class="text-sm text-cosmic-400">Productos Destacados</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-gold-400 mb-2">{{ productos_oferta.count }}</div>
-                    <div class="text-sm text-cosmic-400">En Oferta</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-green-400 mb-2">{{ productos_recientes.count }}</div>
-                    <div class="text-sm text-cosmic-400">Recién Agregados</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Productos Destacados -->
-    {% if productos_destacados %}
-        <section class="py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
-                        <i class="fas fa-star mr-3 text-gold-400"></i>
-                        Productos Destacados
-                    </h2>
-                    <p class="text-cosmic-400">Los mazos más populares y recomendados por nuestros expertos</p>
-                </div>
                 
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {% for producto in productos_destacados %}
-                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
-                            <!-- Imagen del producto (reverso del mazo) -->
+                <a href="?categoria=destacados" 
+                   class="px-6 py-3 rounded-lg font-semibold transition-all duration-300 {% if request.GET.categoria == 'destacados' %}bg-gold-500 text-white{% else %}text-gold-400 hover:text-gold-300 hover:bg-gold-500/20{% endif %}">
+                    <i class="fas fa-star mr-2"></i>
+                    Productos Destacados
+                </a>
+                
+                <a href="?categoria=ofertas" 
+                   class="px-6 py-3 rounded-lg font-semibold transition-all duration-300 {% if request.GET.categoria == 'ofertas' %}bg-red-500 text-white{% else %}text-red-400 hover:text-red-300 hover:bg-red-500/20{% endif %}">
+                    <i class="fas fa-tags mr-2"></i>
+                    En Oferta
+                </a>
+                
+                <a href="?categoria=recientes" 
+                   class="px-6 py-3 rounded-lg font-semibold transition-all duration-300 {% if request.GET.categoria == 'recientes' %}bg-mystic-500 text-white{% else %}text-mystic-400 hover:text-mystic-300 hover:bg-mystic-500/20{% endif %}">
+                    <i class="fas fa-sparkles mr-2"></i>
+                    Recién Agregados
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido Principal -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+            <!-- Sidebar de Filtros -->
+            <div class="lg:col-span-1 mb-8 lg:mb-0">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-24">
+                    <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-6">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filtros
+                    </h3>
+
+                    <form method="GET" id="sidebar-filters" class="space-y-6">
+                        <!-- Mantener la categoría actual -->
+                        {% if request.GET.categoria %}
+                            <input type="hidden" name="categoria" value="{{ request.GET.categoria }}">
+                        {% endif %}
+
+                        <!-- Búsqueda -->
+                        <div>
+                            <label class="block text-sm font-semibold text-cosmic-300 mb-2">Buscar</label>
                             <div class="relative">
-                                {% if producto.mazo.imagen_reverso %}
-                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
-                                         alt="{{ producto.mazo.nombre }}"
-                                         class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300">
-                                {% else %}
-                                    <div class="w-full h-64 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
-                                        <i class="fas fa-cards-blank text-4xl text-cosmic-400"></i>
-                                    </div>
-                                {% endif %}
-                                
-                                <!-- Badge de destacado -->
-                                <div class="absolute top-2 left-2 bg-gold-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                    <i class="fas fa-star mr-1"></i>Destacado
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ search|default:'' }}"
+                                       placeholder="Buscar mazos..."
+                                       class="w-full px-4 py-2 pl-10 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors text-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-cosmic-400 text-sm"></i>
                                 </div>
-                                
-                                <!-- Badge de descuento -->
-                                {% if producto.tiene_descuento %}
-                                    <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                        -{{ producto.porcentaje_descuento }}%
-                                    </div>
-                                {% endif %}
                             </div>
+                        </div>
 
-                            <!-- Contenido del producto -->
-                            <div class="p-6">
-                                <h3 class="text-xl font-mystical font-semibold text-primary-300 mb-2">
-                                    {{ producto.mazo.nombre }}
-                                </h3>
-                                <p class="text-cosmic-400 text-sm mb-3">
-                                    {{ producto.mazo.set.nombre }}
-                                </p>
-                                
-                                {% if producto.descripcion_adicional %}
-                                    <p class="text-cosmic-300 text-sm mb-4 line-clamp-2">
-                                        {{ producto.descripcion_adicional|truncatewords:20 }}
-                                    </p>
-                                {% endif %}
-
-                                <!-- Precio -->
-                                <div class="flex items-center justify-between mb-4">
-                                    <div class="flex items-center space-x-2">
-                                        {% if producto.tiene_descuento %}
-                                            <span class="text-2xl font-bold text-green-400">${{ producto.precio_actual }}</span>
-                                            <span class="text-sm text-cosmic-400 line-through">${{ producto.precio }}</span>
-                                        {% else %}
-                                            <span class="text-2xl font-bold text-gold-400">${{ producto.precio_actual }}</span>
+                        <!-- Filtros por Set -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-mystic-300 mb-3">
+                                <i class="fas fa-folder mr-1"></i>
+                                Filtrar por Sets
+                            </h4>
+                            <div class="space-y-2">
+                                {% if sets_disponibles %}
+                                    {% for set_option in sets_disponibles %}
+                                        <label class="flex items-center cursor-pointer hover:bg-cosmic-800/30 p-3 rounded-lg transition-colors group">
+                                            <input type="checkbox" 
+                                                   name="sets" 
+                                                   value="{{ set_option.pk }}" 
+                                                   {% if set_option.pk|stringformat:"s" in sets_filter %}checked{% endif %}
+                                                   class="h-4 w-4 text-mystic-600 focus:ring-mystic-500 border-mystic-300 rounded mr-3">
+                                            <div class="flex-1">
+                                                <span class="text-cosmic-200 text-sm font-medium">{{ set_option.nombre }}</span>
+                                                <div class="text-xs text-cosmic-400">{{ set_option.codigo }}</div>
+                                            </div>
+                                        </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-folder-open text-2xl text-cosmic-500 mb-2"></i>
+                                        <p class="text-cosmic-400 text-sm">No hay sets disponibles</p>
+                                        {% if user.is_staff %}
+                                            <a href="{% url 'oraculo:set_create' %}" 
+                                               class="text-gold-400 hover:text-gold-300 text-xs mt-2 inline-block">
+                                                <i class="fas fa-plus mr-1"></i>
+                                                Crear primer set
+                                            </a>
                                         {% endif %}
                                     </div>
-                                    <span class="text-xs text-cosmic-400">
-                                        {{ producto.mazo.total_cartas }} cartas
-                                    </span>
-                                </div>
-
-                                <!-- Botones -->
-                                <div class="flex gap-2">
-                                    <a href="{{ producto.link_compra }}" 
-                                       target="_blank" 
-                                       rel="noopener noreferrer"
-                                       class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-4 rounded-lg font-semibold transition-all duration-300">
-                                        <i class="fas fa-shopping-cart mr-1"></i>
-                                        ${{ producto.precio_actual }}
-                                    </a>
-                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
-                                       class="bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-2 px-4 rounded-lg transition-colors">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
-    {% endif %}
-
-    <!-- Productos en Oferta -->
-    {% if productos_oferta %}
-        <section class="py-16 bg-cosmic-800/30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-mystical font-bold text-gold-300 mb-4">
-                        <i class="fas fa-tags mr-3"></i>
-                        Ofertas Especiales
-                    </h2>
-                    <p class="text-cosmic-400">Aprovecha estos descuentos únicos en mazos seleccionados</p>
-                </div>
-                
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {% for producto in productos_oferta %}
-                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-gold-500/20 hover:border-gold-400/40 transition-all duration-300 group">
-                            <div class="relative">
-                                {% if producto.mazo.imagen_reverso %}
-                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
-                                         alt="{{ producto.mazo.nombre }}"
-                                         class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
                                 {% endif %}
-                                <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                    -{{ producto.porcentaje_descuento }}%
-                                </div>
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-primary-300 mb-2">{{ producto.mazo.nombre }}</h4>
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-lg font-bold text-green-400">${{ producto.precio_actual }}</span>
-                                        <span class="text-sm text-cosmic-400 line-through ml-2">${{ producto.precio }}</span>
-                                    </div>
-                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
-                                       class="text-gold-400 hover:text-gold-300">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
-    {% endif %}
 
-    <!-- Productos Recientes -->
-    {% if productos_recientes %}
-        <section class="py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-mystical font-bold text-mystic-300 mb-4">
-                        <i class="fas fa-sparkles mr-3"></i>
-                        Últimos Agregados
-                    </h2>
-                    <p class="text-cosmic-400">Los mazos más recientes en nuestra colección</p>
-                </div>
-                
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {% for producto in productos_recientes %}
-                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-mystic-500/20 hover:border-mystic-400/40 transition-all duration-300 group">
-                            <div class="relative">
-                                {% if producto.mazo.imagen_reverso %}
-                                    <img src="{{ producto.mazo.imagen_reverso.url }}" 
-                                         alt="{{ producto.mazo.nombre }}"
-                                         class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
-                                {% endif %}
-                                <div class="absolute top-2 left-2 bg-mystic-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
-                                    Nuevo
-                                </div>
-                            </div>
-                            <div class="p-4">
-                                <h4 class="font-semibold text-primary-300 mb-1">{{ producto.mazo.nombre }}</h4>
-                                <p class="text-xs text-cosmic-400 mb-2">{{ producto.mazo.set.nombre }}</p>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-lg font-bold text-gold-400">${{ producto.precio_actual }}</span>
-                                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
-                                       class="text-mystic-400 hover:text-mystic-300">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
+                        <!-- Ordenamiento -->
+                        <div>
+                            <label class="block text-sm font-semibold text-cosmic-300 mb-2">Ordenar por</label>
+                            <select name="orden" 
+                                    class="w-full px-4 py-2 rounded-lg bg-cosmic-700/50 border border-cosmic-500/30 text-cosmic-100 focus:outline-none focus:border-cosmic-400 focus:ring-1 focus:ring-cosmic-400 transition-colors text-sm">
+                                <option value="destacados" {% if orden == 'destacados' %}selected{% endif %}>Destacados</option>
+                                <option value="recientes" {% if orden == 'recientes' %}selected{% endif %}>Más Recientes</option>
+                                <option value="nombre" {% if orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+                                <option value="precio_asc" {% if orden == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+                                <option value="precio_desc" {% if orden == 'precio_desc' %}selected{% endif %}>Precio: Mayor a Menor</option>
+                            </select>
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
-    {% endif %}
 
-    <!-- CTA Final -->
-    <section class="py-16">
-        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <div class="bg-gradient-to-r from-cosmic-700/40 via-primary-900/20 to-cosmic-700/40 backdrop-blur-sm rounded-2xl p-8 border border-gold-500/20">
-                <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
-                    ¿Listo para Comenzar tu Viaje?
-                </h2>
-                <p class="text-cosmic-300 mb-8 leading-relaxed">
-                    Explora nuestra colección completa de mazos místicos y encuentra el que resuene con tu alma. 
-                    Cada mazo ha sido cuidadosamente seleccionado para ofrecerte una experiencia única de conexión espiritual.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{% url 'tienda:producto_list' %}" 
-                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
-                        <i class="fas fa-compass mr-2"></i>
-                        Explorar Catálogo Completo
-                    </a>
-                    <a href="{% url 'oraculo:carta_list' %}" 
-                       class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
-                        <i class="fas fa-eye mr-2"></i>
-                        Ver Cartas Gratis
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+                        <button type="button" 
+                                onclick="clearFilters()"
+                                class="w-full px-4 py-2 bg-gold-500/20 text-gold-400 hover:bg-gold-500/30 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-times mr-1"></i>
+                            Limpiar Filtros
+                        </button>
+                    </form>
 
-    <!-- Empty State (si no hay productos) -->
-    {% if not productos_destacados and not productos_recientes and not productos_oferta %}
-        <section class="py-24">
-            <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-8">
-                    <i class="fas fa-store text-3xl text-cosmic-400"></i>
-                </div>
-                <h2 class="text-3xl font-mystical font-bold text-cosmic-300 mb-4">
-                    La Tienda Está Preparándose
-                </h2>
-                <p class="text-cosmic-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-                    Estamos trabajando para traerte los mejores mazos de tarot y oráculos. 
-                    Mientras tanto, puedes explorar nuestro catálogo de cartas disponibles.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{% url 'oraculo:carta_list' %}" 
-                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300">
-                        <i class="fas fa-cards-blank mr-2"></i>
-                        Explorar Cartas
-                    </a>
+                    <!-- Admin Actions -->
                     {% if user.is_staff %}
-                        <a href="{% url 'tienda:admin_producto_create' %}" 
-                           class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
-                            <i class="fas fa-plus mr-2"></i>
-                            Agregar Productos
-                        </a>
+                        <div class="mt-6 pt-4 border-t border-cosmic-600">
+                            <h4 class="text-sm font-semibold text-cosmic-300 mb-3">Administración</h4>
+                            <div class="space-y-2">
+                                <a href="{% url 'tienda:admin_producto_create' %}" 
+                                   class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Agregar Producto
+                                </a>
+                                <a href="{% url 'tienda:admin_producto_list' %}" 
+                                   class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
+                                    <i class="fas fa-cog mr-2"></i>
+                                    Administrar Productos
+                                </a>
+                            </div>
+                        </div>
                     {% endif %}
                 </div>
             </div>
-        </section>
-    {% endif %}
 
-    <!-- Newsletter Section -->
-    <section class="py-16 bg-cosmic-800/50">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-2xl font-mystical font-bold text-primary-300 mb-4">
-                <i class="fas fa-envelope-open-text mr-2"></i>
-                Mantente Conectado
-            </h2>
-            <p class="text-cosmic-400 mb-6">
-                Recibe noticias sobre nuevos mazos, ofertas especiales y sabiduría cósmica directamente en tu correo
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input type="email" 
-                       placeholder="tu@email.com" 
-                       class="flex-1 px-4 py-3 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
-                <button class="bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
-                    Suscribirse
-                </button>
+            <!-- Grid de Productos -->
+            <div class="lg:col-span-3">
+                {% if page_obj %}
+                    <!-- Resultados -->
+                    <div class="mb-6 flex items-center justify-between">
+                        <p class="text-cosmic-300">
+                            <span class="text-primary-400 font-semibold">{{ total_productos }}</span> 
+                            producto{{ total_productos|pluralize }} 
+                            {% if request.GET.categoria == 'destacados' %}destacado{{ total_productos|pluralize }}
+                            {% elif request.GET.categoria == 'ofertas' %}en oferta
+                            {% elif request.GET.categoria == 'recientes' %}recién agregado{{ total_productos|pluralize }}
+                            {% else %}disponible{{ total_productos|pluralize }}
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Grid de Productos -->
+                    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                        {% for producto in page_obj %}
+                            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                                <!-- Imagen del producto -->
+                                <div class="relative">
+                                    {% if producto.mazo.imagen_reverso %}
+                                        <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                             alt="{{ producto.mazo.nombre }}"
+                                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                                    {% else %}
+                                        <div class="w-full h-48 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
+                                            <i class="fas fa-cards-blank text-3xl text-cosmic-400"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Badges -->
+                                    {% if producto.destacado %}
+                                        <div class="absolute top-2 left-2 bg-gold-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                            <i class="fas fa-star mr-1"></i>Destacado
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if producto.tiene_descuento %}
+                                        <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                            -{{ producto.porcentaje_descuento }}%
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Estado -->
+                                    {% if producto.estado != 'activo' %}
+                                        <div class="absolute bottom-2 left-2 bg-cosmic-900/80 text-cosmic-300 px-2 py-1 rounded text-xs">
+                                            {{ producto.get_estado_display }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Contenido -->
+                                <div class="p-4">
+                                    <!-- Header -->
+                                    <div class="mb-3">
+                                        <h3 class="text-lg font-mystical font-semibold text-primary-300 group-hover:text-primary-200 transition-colors mb-1">
+                                            {{ producto.mazo.nombre }}
+                                        </h3>
+                                        <div class="flex items-center justify-between text-xs text-cosmic-400">
+                                            <span class="bg-mystic-500/20 text-mystic-300 px-2 py-1 rounded">
+                                                {{ producto.mazo.set.nombre }}
+                                            </span>
+                                            <span>{{ producto.mazo.total_cartas }} cartas</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Descripción -->
+                                    {% if producto.descripcion_adicional %}
+                                        <p class="text-cosmic-300 text-sm mb-3 line-clamp-2">
+                                            {{ producto.descripcion_adicional|truncatewords:12 }}
+                                        </p>
+                                    {% endif %}
+
+                                    <!-- Precio -->
+                                    <div class="mb-4">
+                                        {% if producto.tiene_descuento %}
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xl font-bold text-green-400">${{ producto.precio_actual }}</span>
+                                                <span class="text-sm text-cosmic-400 line-through">${{ producto.precio }}</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-xl font-bold text-gold-400">${{ producto.precio_actual }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Botones -->
+                                    <div class="flex gap-2">
+                                        <a href="{{ producto.link_compra }}" 
+                                           target="_blank" 
+                                           rel="noopener noreferrer"
+                                           class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
+                                            <i class="fas fa-shopping-cart mr-1"></i>
+                                            ${{ producto.precio_actual }}
+                                        </a>
+                                        <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                                           class="bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-2 px-3 rounded-lg transition-colors">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if user.is_staff %}
+                                            <a href="{% url 'tienda:admin_producto_detail' producto.pk %}" 
+                                               class="bg-gold-600 hover:bg-gold-500 text-white py-2 px-3 rounded-lg transition-colors">
+                                                <i class="fas fa-cog"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Paginación -->
+                    {% if page_obj.has_other_pages %}
+                        <div class="flex justify-center items-center space-x-2 mb-8">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            {% endif %}
+
+                            <span class="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium">
+                                {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- Estado vacío -->
+                    <div class="text-center py-16">
+                        <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-store text-3xl text-cosmic-400"></i>
+                        </div>
+                        <h3 class="text-2xl font-mystical font-semibold text-cosmic-300 mb-4">
+                            No hay productos disponibles en este momento
+                        </h3>
+                        <p class="text-cosmic-400 mb-8 max-w-md mx-auto">
+                            {% if search or set_filter or precio_filter %}
+                                Intenta ajustar tus filtros de búsqueda para encontrar otros productos.
+                            {% else %}
+                                Estamos trabajando para traerte los mejores mazos de tarot y oráculos muy pronto.
+                            {% endif %}
+                        </p>
+                        
+                        {% if search or set_filter or precio_filter %}
+                            <button onclick="clearFilters()" 
+                                    class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                                <i class="fas fa-times mr-2"></i>
+                                Limpiar Filtros
+                            </button>
+                        {% endif %}
+                        
+                        {% if user.is_staff %}
+                            <div class="mt-4">
+                                <a href="{% url 'tienda:admin_producto_create' %}" 
+                                   class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Agregar Primer Producto
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
-    </section>
+    </div>
 </div>
+
+{% block extra_js %}
+<script>
+    function clearFilters() {
+        // Mantener solo la categoría si existe
+        const categoria = new URLSearchParams(window.location.search).get('categoria');
+        if (categoria) {
+            window.location.href = '{% url "tienda:home" %}?categoria=' + categoria;
+        } else {
+            window.location.href = '{% url "tienda:home" %}';
+        }
+    }
+    
+    function updateCheckboxUI(checkbox) {
+        // Ya no necesitamos esta función porque usamos checkboxes normales de Tailwind
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit cuando cambian los checkboxes de sets
+        const setCheckboxes = document.querySelectorAll('input[name="sets"]');
+        setCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                document.getElementById('sidebar-filters').submit();
+            });
+        });
+        
+        // Auto-submit para otros filtros
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('sidebar-filters').submit();
+                }
+            });
+            
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    document.getElementById('sidebar-filters').submit();
+                }, 500);
+            });
+        }
+        
+        const ordenSelect = document.querySelector('select[name="orden"]');
+        if (ordenSelect) {
+            ordenSelect.addEventListener('change', function() {
+                document.getElementById('sidebar-filters').submit();
+            });
+        }
+    });
+</script>
+{% endblock %}
 {% endblock %}

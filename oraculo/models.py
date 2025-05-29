@@ -35,6 +35,19 @@ class Set(models.Model):
     
     def __str__(self):
         return f"{self.nombre} ({self.codigo})"
+    
+    def productos_activos_count(self):
+        """Retorna el número de productos activos en este set"""
+        return self.mazos.filter(producto__estado='activo').count()
+
+# El método completo se vería así en la clase Set:
+
+class Set(models.Model):
+    # ... campos existentes ...
+    
+    def productos_activos_count(self):
+        """Retorna el número de productos activos en este set"""
+        return self.mazos.filter(producto__estado='activo').count()
 
 
 class Mazo(models.Model):

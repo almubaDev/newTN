@@ -133,38 +133,74 @@ def admin_producto_delete(request, pk):
 
 def tienda_home(request):
     """
-    Vista principal de la tienda
+    Vista principal de la tienda - con filtros por categorías y sidebar
     """
-    # Productos destacados
-    productos_destacados = TarotProduct.objects.filter(
-        estado='activo', 
-        destacado=True
-    ).select_related('mazo', 'mazo__set')[:6]
+    productos = TarotProduct.objects.filter(estado='activo').select_related('mazo', 'mazo__set')
     
-    # Productos recientes
-    productos_recientes = TarotProduct.objects.filter(
-        estado='activo'
-    ).select_related('mazo', 'mazo__set').order_by('-fecha_creacion')[:8]
+    # Filtro por categoría (navbar secundaria)
+    categoria = request.GET.get('categoria', 'todos')
+    if categoria == 'destacados':
+        productos = productos.filter(destacado=True)
+    elif categoria == 'ofertas':
+        productos = productos.filter(precio_oferta__isnull=False)
+    elif categoria == 'recientes':
+        productos = productos.order_by('-fecha_creacion')
+    # Si es 'todos' o cualquier otro valor, no filtrar
     
-    # Productos en oferta
-    productos_oferta = TarotProduct.objects.filter(
-        estado='activo',
-        precio_oferta__isnull=False
-    ).select_related('mazo', 'mazo__set')[:4]
+    # Búsqueda
+    search = request.GET.get('search')
+    if search:
+        productos = productos.filter(
+            Q(mazo__nombre__icontains=search) |
+            Q(mazo__set__nombre__icontains=search) |
+            Q(descripcion_adicional__icontains=search)
+        )
+    
+    # Filtro por sets múltiples (checkboxes)
+    sets_filter = request.GET.getlist('sets')  # Obtener lista de sets seleccionados
+    if sets_filter:
+        productos = productos.filter(mazo__set_id__in=sets_filter)
+    
+    # Ordenamiento (solo si no es categoría 'recientes' que ya está ordenada)
+    orden = request.GET.get('orden', 'destacados')
+    if categoria != 'recientes':
+        if orden == 'precio_asc':
+            productos = productos.order_by('precio')
+        elif orden == 'precio_desc':
+            productos = productos.order_by('-precio')
+        elif orden == 'nombre':
+            productos = productos.order_by('mazo__nombre')
+        elif orden == 'recientes':
+            productos = productos.order_by('-fecha_creacion')
+        else:  # destacados (por defecto)
+            productos = productos.order_by('orden', '-destacado', '-fecha_creacion')
+    
+    # Paginación
+    paginator = Paginator(productos, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Sets para filtros - TODOS los sets, no solo los que tienen productos
+    from oraculo.models import Set
+    sets_disponibles = Set.objects.all().order_by('nombre')
     
     context = {
         'title': 'Tienda Tarotnaútica',
-        'productos_destacados': productos_destacados,
-        'productos_recientes': productos_recientes,
-        'productos_oferta': productos_oferta,
-        'total_productos': TarotProduct.objects.filter(estado='activo').count(),
+        'page_obj': page_obj,
+        'sets_disponibles': sets_disponibles,
+        'search': search,
+        'sets_filter': sets_filter,  # Lista de sets seleccionados
+        'orden': orden,
+        'categoria': categoria,
+        'total_productos': page_obj.paginator.count,
     }
     
     return render(request, 'tienda/home.html', context)
+            
 
 def producto_list(request):
     """
-    Lista pública de productos
+    Lista pública de productos (mantener para compatibilidad)
     """
     productos = TarotProduct.objects.filter(estado='activo').select_related('mazo', 'mazo__set')
     
