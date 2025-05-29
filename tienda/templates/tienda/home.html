@@ -32,12 +32,37 @@
         </div>
     </section>
 
+    <!-- Stats Section -->
+    <section class="py-12 bg-cosmic-800/30">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-primary-400 mb-2">{{ total_productos }}</div>
+                    <div class="text-sm text-cosmic-400">Productos Disponibles</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-mystic-400 mb-2">{{ productos_destacados.count }}</div>
+                    <div class="text-sm text-cosmic-400">Productos Destacados</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-gold-400 mb-2">{{ productos_oferta.count }}</div>
+                    <div class="text-sm text-cosmic-400">En Oferta</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-400 mb-2">{{ productos_recientes.count }}</div>
+                    <div class="text-sm text-cosmic-400">Recién Agregados</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Productos Destacados -->
     {% if productos_destacados %}
         <section class="py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
+                        <i class="fas fa-star mr-3 text-gold-400"></i>
                         Productos Destacados
                     </h2>
                     <p class="text-cosmic-400">Los mazos más populares y recomendados por nuestros expertos</p>
@@ -174,6 +199,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-mystical font-bold text-mystic-300 mb-4">
+                        <i class="fas fa-sparkles mr-3"></i>
                         Últimos Agregados
                     </h2>
                     <p class="text-cosmic-400">Los mazos más recientes en nuestra colección</p>
@@ -217,4 +243,77 @@
                 <h2 class="text-3xl font-mystical font-bold text-primary-300 mb-4">
                     ¿Listo para Comenzar tu Viaje?
                 </h2>
-                <p class="text
+                <p class="text-cosmic-300 mb-8 leading-relaxed">
+                    Explora nuestra colección completa de mazos místicos y encuentra el que resuene con tu alma. 
+                    Cada mazo ha sido cuidadosamente seleccionado para ofrecerte una experiencia única de conexión espiritual.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'tienda:producto_list' %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-compass mr-2"></i>
+                        Explorar Catálogo Completo
+                    </a>
+                    <a href="{% url 'oraculo:carta_list' %}" 
+                       class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
+                        <i class="fas fa-eye mr-2"></i>
+                        Ver Cartas Gratis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Empty State (si no hay productos) -->
+    {% if not productos_destacados and not productos_recientes and not productos_oferta %}
+        <section class="py-24">
+            <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <i class="fas fa-store text-3xl text-cosmic-400"></i>
+                </div>
+                <h2 class="text-3xl font-mystical font-bold text-cosmic-300 mb-4">
+                    La Tienda Está Preparándose
+                </h2>
+                <p class="text-cosmic-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Estamos trabajando para traerte los mejores mazos de tarot y oráculos. 
+                    Mientras tanto, puedes explorar nuestro catálogo de cartas disponibles.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'oraculo:carta_list' %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300">
+                        <i class="fas fa-cards-blank mr-2"></i>
+                        Explorar Cartas
+                    </a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'tienda:admin_producto_create' %}" 
+                           class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-8 py-4 rounded-lg font-semibold transition-all duration-300">
+                            <i class="fas fa-plus mr-2"></i>
+                            Agregar Productos
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Newsletter Section -->
+    <section class="py-16 bg-cosmic-800/50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-2xl font-mystical font-bold text-primary-300 mb-4">
+                <i class="fas fa-envelope-open-text mr-2"></i>
+                Mantente Conectado
+            </h2>
+            <p class="text-cosmic-400 mb-6">
+                Recibe noticias sobre nuevos mazos, ofertas especiales y sabiduría cósmica directamente en tu correo
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input type="email" 
+                       placeholder="tu@email.com" 
+                       class="flex-1 px-4 py-3 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
+                <button class="bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                    Suscribirse
+                </button>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

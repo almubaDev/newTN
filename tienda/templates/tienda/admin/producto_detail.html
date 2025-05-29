@@ -1,0 +1,285 @@
+<!-- tienda/templates/tienda/admin/producto_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'tienda:admin_producto_list' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <div class="flex-1">
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                        {{ producto.mazo.nombre }}
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Producto administrativo - Set: {{ producto.mazo.set.nombre }}
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'tienda:admin_producto_update' producto.pk %}" 
+                       class="bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300">
+                        <i class="fas fa-edit mr-2"></i>
+                        Editar
+                    </a>
+                    <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300">
+                        <i class="fas fa-eye mr-2"></i>
+                        Ver Público
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Product Main Info -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Status Overview -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20">
+                    <h2 class="text-xl font-mystical font-semibold text-primary-300 mb-4">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Estado del Producto
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-4 gap-4">
+                        <!-- Price -->
+                        <div class="bg-cosmic-800/50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-gold-400 mb-1">
+                                ${{ producto.precio_actual }}
+                            </div>
+                            <div class="text-sm text-cosmic-400">Precio Actual</div>
+                            {% if producto.tiene_descuento %}
+                                <div class="text-xs text-green-400 mt-1">
+                                    {{ producto.porcentaje_descuento }}% OFF
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status -->
+                        <div class="bg-cosmic-800/50 rounded-lg p-4 text-center">
+                            <div class="text-lg font-bold mb-1">
+                                {% if producto.estado == 'activo' %}
+                                    <span class="text-green-400">Activo</span>
+                                {% elif producto.estado == 'agotado' %}
+                                    <span class="text-red-400">Agotado</span>
+                                {% else %}
+                                    <span class="text-cosmic-400">{{ producto.get_estado_display }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-cosmic-400">Estado</div>
+                        </div>
+
+                        <!-- Featured -->
+                        <div class="bg-cosmic-800/50 rounded-lg p-4 text-center">
+                            <div class="text-lg mb-1">
+                                {% if producto.destacado %}
+                                    <i class="fas fa-star text-gold-400"></i>
+                                {% else %}
+                                    <i class="fas fa-star text-cosmic-500"></i>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-cosmic-400">
+                                {% if producto.destacado %}Destacado{% else %}Normal{% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Order -->
+                        <div class="bg-cosmic-800/50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-mystic-400 mb-1">
+                                {{ producto.orden }}
+                            </div>
+                            <div class="text-sm text-cosmic-400">Orden</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-mystic-500/20">
+                    <h3 class="text-xl font-mystical font-semibold text-mystic-300 mb-4">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Detalles del Producto
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-semibold text-cosmic-300 mb-2">Información Básica</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Mazo:</span>
+                                        <span class="text-cosmic-200">{{ producto.mazo.nombre }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Código:</span>
+                                        <span class="text-cosmic-200 font-mono">{{ producto.mazo.codigo }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Set:</span>
+                                        <span class="text-cosmic-200">{{ producto.mazo.set.nombre }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Total Cartas:</span>
+                                        <span class="text-cosmic-200">{{ producto.mazo.total_cartas }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-sm font-semibold text-cosmic-300 mb-2">Configuración de Venta</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Precio Normal:</span>
+                                        <span class="text-gold-400">${{ producto.precio }}</span>
+                                    </div>
+                                    {% if producto.precio_oferta %}
+                                        <div class="flex justify-between">
+                                            <span class="text-cosmic-400">Precio Oferta:</span>
+                                            <span class="text-green-400">${{ producto.precio_oferta }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Estado:</span>
+                                        <span class="text-cosmic-200">{{ producto.get_estado_display }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-cosmic-400">Destacado:</span>
+                                        <span class="text-cosmic-200">
+                                            {% if producto.destacado %}Sí{% else %}No{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Purchase Link -->
+                        <div class="pt-4 border-t border-cosmic-600">
+                            <h4 class="text-sm font-semibold text-cosmic-300 mb-2">Link de Compra</h4>
+                            <div class="bg-cosmic-800/50 rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <code class="text-xs text-cosmic-300 truncate mr-4">{{ producto.link_compra }}</code>
+                                    <a href="{{ producto.link_compra }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="text-primary-400 hover:text-primary-300 transition-colors">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descriptions -->
+                <div class="space-y-6">
+                    <!-- Mazo Description -->
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gold-500/20">
+                        <h3 class="text-xl font-mystical font-semibold text-gold-300 mb-4">
+                            <i class="fas fa-align-left mr-2"></i>
+                            Descripción del Mazo
+                        </h3>
+                        <div class="prose prose-invert max-w-none">
+                            <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
+                                {{ producto.mazo.descripcion }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Additional Description -->
+                    {% if producto.descripcion_adicional %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-green-500/20">
+                            <h3 class="text-xl font-mystical font-semibold text-green-300 mb-4">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Descripción Adicional del Producto
+                            </h3>
+                            <div class="prose prose-invert max-w-none">
+                                <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
+                                    {{ producto.descripcion_adicional }}
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-8 space-y-6">
+                    <!-- Product Image -->
+                    <div>
+                        <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-4">
+                            Imagen del Producto
+                        </h3>
+                        {% if producto.mazo.imagen_reverso %}
+                            <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                 alt="{{ producto.mazo.nombre }}"
+                                 class="w-full aspect-[3/4] object-cover rounded-xl border-2 border-gold-500/30">
+                        {% else %}
+                            <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-gold-500/30 flex items-center justify-center">
+                                <i class="fas fa-cards-blank text-4xl text-cosmic-400"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Sample Cards -->
+                    {% if cartas_muestra %}
+                        <div>
+                            <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                                Muestra de Cartas
+                            </h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                {% for carta in cartas_muestra %}
+                                    <div class="bg-cosmic-800/50 rounded-lg overflow-hidden border border-gold-500/20">
+                                        {% if carta.imagen %}
+                                            <img src="{{ carta.imagen.url }}" 
+                                                 alt="{{ carta.nombre }}"
+                                                 class="w-full aspect-[3/4] object-cover">
+                                        {% else %}
+                                            <div class="w-full aspect-[3/4] bg-cosmic-700 flex items-center justify-center">
+                                                <i class="fas fa-image text-cosmic-400 text-xs"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Admin Actions -->
+                    <div class="space-y-3">
+                        <a href="{% url 'tienda:admin_producto_update' producto.pk %}" 
+                           class="w-full bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Producto
+                        </a>
+                        <a href="{% url 'tienda:producto_detail' producto.pk %}" 
+                           class="w-full bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                            <i class="fas fa-eye mr-2"></i>
+                            Vista Pública
+                        </a>
+                        <a href="{% url 'tienda:admin_producto_delete' producto.pk %}" 
+                           class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                            <i class="fas fa-trash mr-2"></i>
+                            Eliminar Producto
+                        </a>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="pt-4 border-t border-cosmic-600">
+                        <h4 class="text-sm font-semibold text-cosmic-300 mb-2">Información del Sistema</h4>
+                        <div class="space-y-1 text-xs text-cosmic-400">
+                            <div>Creado: {{ producto.fecha_creacion|date:"d/m/Y H:i" }}</div>
+                            <div>Actualizado: {{ producto.fecha_actualizacion|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

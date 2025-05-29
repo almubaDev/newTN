@@ -27,22 +27,63 @@
                     <i class="fas fa-cog mr-2"></i>Motor Náutica
                 </a>
                 
-                <!-- Admin Dashboard - Solo para staff -->
-                {% if user.is_authenticated and user.is_staff %}
-                    <a href="{% url 'oraculo:admin_dashboard' %}" 
-                       class="text-cosmic-300 hover:text-red-400 transition-colors duration-200 font-medium">
-                        <i class="fas fa-tools mr-2"></i>Admin
-                    </a>
-                    <a href="{% url 'oraculo:carta_list' %}" 
-                        class="text-cosmic-300 hover:text-mystic-400 transition-colors duration-200 font-medium">
-                         <i class="fas fa-cards-blank mr-2"></i>Catálogo
-                    </a>
-                {% endif %}
-                
-                <a href="#" 
+                <!-- Tienda Link - Directo sin dropdown -->
+                <a href="{% url 'tienda:home' %}" 
                    class="text-cosmic-300 hover:text-mystic-400 transition-colors duration-200 font-medium">
                     <i class="fas fa-store mr-2"></i>Tienda
                 </a>
+                
+                <!-- Admin Dashboard - Solo para staff -->
+                {% if user.is_authenticated and user.is_staff %}
+                    <div class="relative group">
+                        <a href="{% url 'oraculo:admin_dashboard' %}" 
+                           class="text-cosmic-300 hover:text-red-400 transition-colors duration-200 font-medium flex items-center">
+                            <i class="fas fa-tools mr-2"></i>Admin
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </a>
+                        
+                        <!-- Dropdown de Admin -->
+                        <div class="absolute left-0 top-full mt-2 w-56 bg-cosmic-800 rounded-lg shadow-lg border border-red-500/20 py-2 hidden group-hover:block z-50">
+                            <a href="{% url 'oraculo:admin_dashboard' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-tachometer-alt mr-2 text-xs"></i>Dashboard Admin
+                            </a>
+                            <div class="border-t border-cosmic-600 my-1"></div>
+                            <div class="px-4 py-1 text-xs text-cosmic-500 font-semibold">
+                                CONTENIDO
+                            </div>
+                            <a href="{% url 'oraculo:set_list' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-folder mr-2 text-xs"></i>Gestionar Sets
+                            </a>
+                            <a href="{% url 'oraculo:mazo_list' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-cards-blank mr-2 text-xs"></i>Gestionar Mazos
+                            </a>
+                            <a href="{% url 'oraculo:carta_list' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-eye mr-2 text-xs"></i>Catálogo de Cartas
+                            </a>
+                            <div class="border-t border-cosmic-600 my-1"></div>
+                            <div class="px-4 py-1 text-xs text-cosmic-500 font-semibold">
+                                TIENDA
+                            </div>
+                            <a href="{% url 'tienda:admin_producto_list' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-green-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-store mr-2 text-xs"></i>Administrar Productos
+                            </a>
+                            <a href="{% url 'tienda:admin_producto_create' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-blue-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-plus mr-2 text-xs"></i>Crear Producto
+                            </a>
+                            <div class="border-t border-cosmic-600 my-1"></div>
+                            <a href="{% url 'admin:index' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-database mr-2 text-xs"></i>Admin Django
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
             
             <!-- User Menu -->
@@ -68,7 +109,6 @@
                         </button>
                         
                         <div id="dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-cosmic-800 rounded-lg shadow-lg border border-primary-500/20 py-2 hidden">
-                            
                             <a href="{% url 'user:profile' %}" 
                                class="block px-4 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 transition-colors">
                                 <i class="fas fa-user mr-2"></i>Mi Perfil
@@ -84,6 +124,10 @@
                                 <div class="px-4 py-2 text-xs text-cosmic-500 font-semibold uppercase tracking-wide">
                                     Administración
                                 </div>
+                                <a href="{% url 'oraculo:admin_dashboard' %}" 
+                                   class="block px-4 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 transition-colors">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard Admin
+                                </a>
                                 <a href="{% url 'oraculo:set_list' %}" 
                                    class="block px-4 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 transition-colors">
                                     <i class="fas fa-folder mr-2"></i>Gestionar Sets
@@ -91,6 +135,10 @@
                                 <a href="{% url 'oraculo:mazo_list' %}" 
                                    class="block px-4 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 transition-colors">
                                     <i class="fas fa-cards-blank mr-2"></i>Gestionar Mazos
+                                </a>
+                                <a href="{% url 'tienda:admin_producto_list' %}" 
+                                   class="block px-4 py-2 text-cosmic-300 hover:text-green-400 hover:bg-cosmic-700/50 transition-colors">
+                                    <i class="fas fa-store mr-2"></i>Admin Tienda
                                 </a>
                                 <a href="{% url 'admin:index' %}" 
                                    class="block px-4 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 transition-colors">
@@ -113,7 +161,8 @@
                     </a>
                     <a href="{% url 'user:register' %}" 
                        class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300">
-                        <i class="fas fa-user-plus mr-2"></i>Registrarse
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Registrarse
                     </a>
                 {% endif %}
             </div>
@@ -141,25 +190,46 @@
                 <i class="fas fa-cog mr-3"></i>Motor Náutica
             </a>
             
-            <!-- Admin Dashboard Mobile - Solo para staff -->
-            {% if user.is_authenticated and user.is_staff %}
-                <a href="{% url 'oraculo:admin_dashboard' %}" 
-                   class="block px-3 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                    <i class="fas fa-tools mr-3"></i>Dashboard Admin
-                </a>
-                <a href="{% url 'oraculo:carta_list' %}" 
-                    class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                     <i class="fas fa-cards-blank mr-3"></i>Catálogo de Cartas
-                </a>
-            {% endif %}
-            
-            <a href="#" 
+            <!-- Tienda Mobile - Directo -->
+            <a href="{% url 'tienda:home' %}" 
                class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
                 <i class="fas fa-store mr-3"></i>Tienda
             </a>
             
+            <!-- Admin Dashboard Mobile - Solo para staff -->
+            {% if user.is_authenticated and user.is_staff %}
+                <div class="border-t border-cosmic-600 my-2"></div>
+                <div class="px-3 py-2 text-xs text-cosmic-500 font-semibold uppercase tracking-wide">
+                    Administración
+                </div>
+                <a href="{% url 'oraculo:admin_dashboard' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-tachometer-alt mr-3"></i>Dashboard Admin
+                </a>
+                <a href="{% url 'oraculo:set_list' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-folder mr-3"></i>Gestionar Sets
+                </a>
+                <a href="{% url 'oraculo:mazo_list' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-cards-blank mr-3"></i>Gestionar Mazos
+                </a>
+                <a href="{% url 'oraculo:carta_list' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-eye mr-3"></i>Catálogo de Cartas
+                </a>
+                <a href="{% url 'tienda:admin_producto_list' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-green-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-store mr-3"></i>Admin Tienda
+                </a>
+                <a href="{% url 'admin:index' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-database mr-3"></i>Admin Django
+                </a>
+            {% endif %}
+            
             {% if user.is_authenticated %}
-                <hr class="border-cosmic-600 my-2">
+                <div class="border-t border-cosmic-600 my-2"></div>
                 <div class="px-3 py-2 text-cosmic-400 text-sm">
                     {{ user.nombre }} - {{ user.creditos_disponibles }} créditos
                 </div>
@@ -172,33 +242,13 @@
                     <i class="fas fa-key mr-3"></i>Cambiar Contraseña
                 </a>
                 
-                <!-- Admin Links Mobile -->
-                {% if user.is_staff %}
-                    <hr class="border-cosmic-600 my-2">
-                    <div class="px-3 py-2 text-xs text-cosmic-500 font-semibold uppercase tracking-wide">
-                        Administración
-                    </div>
-                    <a href="{% url 'oraculo:set_list' %}" 
-                       class="block px-3 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                        <i class="fas fa-folder mr-3"></i>Gestionar Sets
-                    </a>
-                    <a href="{% url 'oraculo:mazo_list' %}" 
-                       class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                        <i class="fas fa-cards-blank mr-3"></i>Gestionar Mazos
-                    </a>
-                    <a href="{% url 'admin:index' %}" 
-                       class="block px-3 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                        <i class="fas fa-database mr-3"></i>Admin Django
-                    </a>
-                {% endif %}
-                
-                <hr class="border-cosmic-600 my-2">
+                <div class="border-t border-cosmic-600 my-2"></div>
                 <a href="{% url 'user:logout' %}" 
                    class="block px-3 py-2 text-red-400 hover:text-red-300 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
                     <i class="fas fa-sign-out-alt mr-3"></i>Cerrar Sesión
                 </a>
             {% else %}
-                <hr class="border-cosmic-600 my-2">
+                <div class="border-t border-cosmic-600 my-2"></div>
                 <a href="{% url 'user:login' %}" 
                    class="block px-3 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
                     <i class="fas fa-sign-in-alt mr-3"></i>Iniciar Sesión

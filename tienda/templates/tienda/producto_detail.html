@@ -1,0 +1,289 @@
+<!-- tienda/templates/tienda/producto_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm text-cosmic-400 mb-6">
+            <a href="{% url 'tienda:home' %}" class="hover:text-cosmic-200 transition-colors">Tienda</a>
+            <i class="fas fa-chevron-right mx-2"></i>
+            <a href="{% url 'tienda:producto_list' %}" class="hover:text-cosmic-200 transition-colors">Productos</a>
+            <i class="fas fa-chevron-right mx-2"></i>
+            <span class="text-primary-400">{{ producto.mazo.nombre }}</span>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 mb-12">
+            <!-- Imagen Principal -->
+            <div class="space-y-4">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-4 border border-primary-500/20">
+                    {% if producto.mazo.imagen_reverso %}
+                        <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                             alt="{{ producto.mazo.nombre }}"
+                             class="w-full object-contain rounded-xl border-2 border-gold-500/30">
+                    {% else %}
+                        <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-gold-500/30 flex items-center justify-center">
+                            <i class="fas fa-cards-blank text-6xl text-cosmic-400"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Galería de Cartas -->
+                {% if cartas_galeria %}
+                    <div>
+                        <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-3">
+                            <i class="fas fa-images mr-2"></i>
+                            Vista Previa de Cartas
+                        </h3>
+                        <div class="grid grid-cols-5 gap-2">
+                            {% for carta in cartas_galeria %}
+                                <div class="bg-cosmic-800/50 rounded-lg overflow-hidden border border-gold-500/20 hover:border-gold-400/40 transition-all group cursor-pointer" onclick="showCardModal('{{ carta.imagen.url }}', '{{ carta.nombre }}')">
+                                    {% if carta.imagen %}
+                                        <img src="{{ carta.imagen.url }}" 
+                                             alt="{{ carta.nombre }}"
+                                             class="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform">
+                                    {% else %}
+                                        <div class="w-full aspect-[3/4] bg-cosmic-700 flex items-center justify-center">
+                                            <i class="fas fa-image text-cosmic-400"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-xs text-cosmic-400 mt-2">
+                            Haz clic en las cartas para ver más detalles
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Información del Producto -->
+            <div class="space-y-6">
+                <!-- Header -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                            {{ producto.mazo.nombre }}
+                        </h1>
+                        {% if producto.destacado %}
+                            <span class="bg-gold-500/20 text-gold-300 px-3 py-1 rounded-full text-sm font-bold">
+                                <i class="fas fa-star mr-1"></i>Destacado
+                            </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-lg text-mystic-400 mb-2">{{ producto.mazo.set.nombre }}</p>
+                    <div class="flex items-center space-x-4 text-sm text-cosmic-400">
+                        <span>
+                            <i class="fas fa-layer-group mr-1"></i>
+                            {{ total_cartas }} cartas
+                        </span>
+                        <span>
+                            <i class="fas fa-barcode mr-1"></i>
+                            {{ producto.mazo.codigo }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Precio -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-6 border border-gold-500/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            {% if producto.tiene_descuento %}
+                                <div class="text-right">
+                                    <div class="text-3xl font-bold text-green-400">${{ producto.precio_actual }}</div>
+                                    <div class="text-lg text-cosmic-400 line-through">${{ producto.precio }}</div>
+                                </div>
+                                <div class="bg-red-500/90 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                    -{{ producto.porcentaje_descuento }}% OFF
+                                </div>
+                            {% else %}
+                                <div class="text-3xl font-bold text-gold-400">${{ producto.precio_actual }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Estado del producto -->
+                    <div class="mb-4">
+                        {% if producto.estado == 'activo' %}
+                            <div class="flex items-center text-green-400">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span class="font-semibold">Disponible</span>
+                            </div>
+                        {% elif producto.estado == 'agotado' %}
+                            <div class="flex items-center text-red-400">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                <span class="font-semibold">Agotado</span>
+                            </div>
+                        {% elif producto.estado == 'proximamente' %}
+                            <div class="flex items-center text-gold-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span class="font-semibold">Próximamente</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botón de compra -->
+                    {% if producto.estado == 'activo' %}
+                        <a href="{{ producto.link_compra }}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 inline-block">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Comprar por ${{ producto.precio_actual }}
+                        </a>
+                    {% else %}
+                        <button disabled 
+                                class="w-full bg-cosmic-600 text-cosmic-400 cursor-not-allowed py-4 px-6 rounded-lg font-bold text-lg">
+                            <i class="fas fa-ban mr-2"></i>
+                            No Disponible
+                        </button>
+                    {% endif %}
+                </div>
+
+                <!-- Descripción del Mazo -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-6 border border-primary-500/20">
+                    <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-4">
+                        <i class="fas fa-align-left mr-2"></i>
+                        Descripción del Mazo
+                    </h3>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
+                            {{ producto.mazo.descripcion }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                {% if producto.descripcion_adicional %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-6 border border-mystic-500/20">
+                        <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Información Especial
+                        </h3>
+                        <div class="prose prose-invert max-w-none">
+                            <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
+                                {{ producto.descripcion_adicional }}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Detalles Técnicos -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-6 border border-gold-500/20">
+                    <h3 class="text-lg font-mystical font-semibold text-gold-300 mb-4">
+                        <i class="fas fa-cog mr-2"></i>
+                        Especificaciones
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-300">Total de Cartas:</span>
+                                <span class="text-cosmic-100 font-semibold">{{ total_cartas }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-300">Set:</span>
+                                <span class="text-cosmic-100">{{ producto.mazo.set.nombre }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-300">Código:</span>
+                                <span class="text-cosmic-100 font-mono">{{ producto.mazo.codigo }}</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-300">Agregado:</span>
+                                <span class="text-cosmic-100">{{ producto.fecha_creacion|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-300">Actualizado:</span>
+                                <span class="text-cosmic-100">{{ producto.fecha_actualizacion|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Relacionados -->
+        {% if productos_relacionados %}
+            <div class="mt-16">
+                <h2 class="text-2xl font-mystical font-bold text-primary-300 mb-8 text-center">
+                    Otros Mazos del Set "{{ producto.mazo.set.nombre }}"
+                </h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for producto_relacionado in productos_relacionados %}
+                        <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                            <div class="relative">
+                                {% if producto_relacionado.mazo.imagen_reverso %}
+                                    <img src="{{ producto_relacionado.mazo.imagen_reverso.url }}" 
+                                         alt="{{ producto_relacionado.mazo.nombre }}"
+                                         class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% endif %}
+                                {% if producto_relacionado.tiene_descuento %}
+                                    <div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                        -{{ producto_relacionado.porcentaje_descuento }}%
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold text-primary-300 mb-2 line-clamp-1">{{ producto_relacionado.mazo.nombre }}</h4>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        {% if producto_relacionado.tiene_descuento %}
+                                            <span class="text-lg font-bold text-green-400">${{ producto_relacionado.precio_actual }}</span>
+                                            <span class="text-sm text-cosmic-400 line-through ml-2">${{ producto_relacionado.precio }}</span>
+                                        {% else %}
+                                            <span class="text-lg font-bold text-gold-400">${{ producto_relacionado.precio_actual }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'tienda:producto_detail' producto_relacionado.pk %}" 
+                                       class="text-primary-400 hover:text-primary-300 transition-colors">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para ver cartas -->
+<div id="cardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="closeCardModal()">
+    <div class="bg-cosmic-800 rounded-2xl p-6 max-w-md w-full border border-primary-500/20" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="cardModalTitle" class="text-lg font-mystical font-semibold text-primary-300"></h3>
+            <button onclick="closeCardModal()" class="text-cosmic-400 hover:text-cosmic-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <img id="cardModalImage" src="" alt="" class="w-full aspect-[3/4] object-contain rounded-lg border border-gold-500/30">
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function showCardModal(imageUrl, cardName) {
+        document.getElementById('cardModalImage').src = imageUrl;
+        document.getElementById('cardModalTitle').textContent = cardName;
+        document.getElementById('cardModal').classList.remove('hidden');
+    }
+    
+    function closeCardModal() {
+        document.getElementById('cardModal').classList.add('hidden');
+    }
+    
+    // Close modal with escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCardModal();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

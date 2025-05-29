@@ -1,0 +1,209 @@
+<!-- tienda/templates/tienda/admin/producto_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300 mb-2">
+                        Administrar Productos
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Gestiona los productos de la tienda
+                    </p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <a href="{% url 'tienda:admin_producto_create' %}" 
+                       class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Crear Producto
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="mb-6">
+            <form method="GET" class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search|default:'' }}"
+                           placeholder="Buscar productos..."
+                           class="w-full px-4 py-3 pl-10 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-cosmic-400"></i>
+                    </div>
+                </div>
+                <select name="estado" 
+                        class="px-4 py-3 rounded-lg bg-cosmic-700/50 border border-mystic-500/30 text-cosmic-100 focus:outline-none focus:border-mystic-400 focus:ring-1 focus:ring-mystic-400 transition-colors">
+                    <option value="">Todos los Estados</option>
+                    {% for value, label in estados %}
+                        <option value="{{ value }}" {% if estado_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" 
+                        class="px-6 py-3 bg-gradient-to-r from-gold-500 to-primary-500 hover:from-gold-600 hover:to-primary-600 text-white rounded-lg font-semibold transition-all duration-300">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filtrar
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Productos -->
+        {% if page_obj %}
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-cosmic-800/50">
+                            <tr>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Producto</th>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Set</th>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Precio</th>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Estado</th>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Destacado</th>
+                                <th class="text-left py-4 px-6 text-cosmic-300 font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-cosmic-600">
+                            {% for producto in page_obj %}
+                                <tr class="hover:bg-cosmic-800/30 transition-colors">
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center">
+                                            {% if producto.mazo.imagen_reverso %}
+                                                <img src="{{ producto.mazo.imagen_reverso.url }}" 
+                                                     alt="{{ producto.mazo.nombre }}"
+                                                     class="w-12 h-16 object-cover rounded border border-gold-500/30 mr-4">
+                                            {% else %}
+                                                <div class="w-12 h-16 bg-cosmic-700 rounded border border-gold-500/30 flex items-center justify-center mr-4">
+                                                    <i class="fas fa-cards-blank text-cosmic-400"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="font-semibold text-primary-300">{{ producto.mazo.nombre }}</div>
+                                                <div class="text-sm text-cosmic-400">{{ producto.mazo.codigo }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-mystic-400">{{ producto.mazo.set.nombre }}</td>
+                                    <td class="py-4 px-6">
+                                        {% if producto.tiene_descuento %}
+                                            <div class="text-green-400 font-bold">${{ producto.precio_actual }}</div>
+                                            <div class="text-sm text-cosmic-400 line-through">${{ producto.precio }}</div>
+                                        {% else %}
+                                            <div class="text-gold-400 font-bold">${{ producto.precio_actual }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        {% if producto.estado == 'activo' %}
+                                            <span class="bg-green-500/20 text-green-300 px-2 py-1 rounded-full text-xs">
+                                                {{ producto.get_estado_display }}
+                                            </span>
+                                        {% elif producto.estado == 'agotado' %}
+                                            <span class="bg-red-500/20 text-red-300 px-2 py-1 rounded-full text-xs">
+                                                {{ producto.get_estado_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="bg-cosmic-500/20 text-cosmic-300 px-2 py-1 rounded-full text-xs">
+                                                {{ producto.get_estado_display }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        {% if producto.destacado %}
+                                            <i class="fas fa-star text-gold-400"></i>
+                                        {% else %}
+                                            <i class="fas fa-star text-cosmic-500"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex space-x-2">
+                                            <a href="{% url 'tienda:admin_producto_detail' producto.pk %}" 
+                                               class="text-primary-400 hover:text-primary-300 p-2">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'tienda:admin_producto_update' producto.pk %}" 
+                                               class="text-gold-400 hover:text-gold-300 p-2">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'tienda:admin_producto_delete' producto.pk %}" 
+                                               class="text-red-400 hover:text-red-300 p-2">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <div class="flex justify-center items-center space-x-2 mt-8">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium">
+                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if estado_filter %}&estado={{ estado_filter }}{% endif %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-store text-3xl text-cosmic-400"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-cosmic-300 mb-2">
+                    No hay productos
+                </h3>
+                <p class="text-cosmic-400 mb-6">
+                    Crea el primer producto para comenzar
+                </p>
+                <a href="{% url 'tienda:admin_producto_create' %}" 
+                   class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Crear Primer Producto
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Back to Dashboard -->
+        <div class="mt-8 text-center">
+            <a href="{% url 'tienda:home' %}" 
+               class="text-cosmic-400 hover:text-cosmic-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver a la Tienda
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
