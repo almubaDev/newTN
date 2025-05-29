@@ -51,14 +51,27 @@ def admin_producto_list(request):
 @user_passes_test(lambda u: u.is_staff)
 def admin_producto_create(request):
     """
-    Crear nuevo producto
+    Crear nuevo producto - CORREGIDO
     """
     if request.method == 'POST':
         form = TarotProductForm(request.POST)
+        print(f"POST recibido, form data: {request.POST}")  # DEBUG
+        
         if form.is_valid():
-            producto = form.save()
-            messages.success(request, f'Producto "{producto.mazo.nombre}" creado exitosamente.')
-            return redirect('tienda:admin_producto_detail', pk=producto.pk)
+            try:
+                producto = form.save()
+                print(f"Producto creado exitosamente: {producto}")  # DEBUG
+                messages.success(request, f'Producto "{producto.mazo.nombre}" creado exitosamente.')
+                return redirect('tienda:admin_producto_detail', pk=producto.pk)
+            except Exception as e:
+                print(f"Error al guardar producto: {e}")  # DEBUG
+                messages.error(request, f'Error al crear el producto: {str(e)}')
+        else:
+            # DEBUG: Mostrar errores del formulario
+            print(f"Formulario no válido. Errores: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = TarotProductForm()
     
@@ -89,16 +102,29 @@ def admin_producto_detail(request, pk):
 @user_passes_test(lambda u: u.is_staff)
 def admin_producto_update(request, pk):
     """
-    Actualizar producto existente
+    Actualizar producto existente - CORREGIDO
     """
     producto = get_object_or_404(TarotProduct, pk=pk)
     
     if request.method == 'POST':
         form = TarotProductForm(request.POST, instance=producto)
+        print(f"POST recibido para actualizar, form data: {request.POST}")  # DEBUG
+        
         if form.is_valid():
-            producto = form.save()
-            messages.success(request, f'Producto "{producto.mazo.nombre}" actualizado exitosamente.')
-            return redirect('tienda:admin_producto_detail', pk=producto.pk)
+            try:
+                producto = form.save()
+                print(f"Producto actualizado exitosamente: {producto}")  # DEBUG
+                messages.success(request, f'Producto "{producto.mazo.nombre}" actualizado exitosamente.')
+                return redirect('tienda:admin_producto_detail', pk=producto.pk)
+            except Exception as e:
+                print(f"Error al actualizar producto: {e}")  # DEBUG
+                messages.error(request, f'Error al actualizar el producto: {str(e)}')
+        else:
+            # DEBUG: Mostrar errores del formulario
+            print(f"Formulario no válido. Errores: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = TarotProductForm(instance=producto)
     
@@ -119,9 +145,14 @@ def admin_producto_delete(request, pk):
     
     if request.method == 'POST':
         nombre = producto.mazo.nombre
-        producto.delete()
-        messages.success(request, f'Producto "{nombre}" eliminado exitosamente.')
-        return redirect('tienda:admin_producto_list')
+        try:
+            producto.delete()
+            messages.success(request, f'Producto "{nombre}" eliminado exitosamente.')
+            return redirect('tienda:admin_producto_list')
+        except Exception as e:
+            print(f"Error al eliminar producto: {e}")  # DEBUG
+            messages.error(request, f'Error al eliminar el producto: {str(e)}')
+            return redirect('tienda:admin_producto_detail', pk=producto.pk)
     
     context = {
         'producto': producto,

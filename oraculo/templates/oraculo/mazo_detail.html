@@ -35,7 +35,7 @@
                         {% if mazo.imagen_reverso %}
                             <img src="{{ mazo.imagen_reverso.url }}" 
                                  alt="{{ mazo.nombre }}"
-                                 class="w-full aspect-[3/4] object-cover rounded-xl border-2 border-gold-500/30">
+                                 class="w-full object-contain rounded-xl border-2 border-gold-500/30">
                         {% else %}
                             <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-gold-500/30 flex items-center justify-center">
                                 <div class="text-center">
@@ -139,7 +139,7 @@
                                         <div class="aspect-[3/4] bg-cosmic-800">
                                             <img src="{{ carta.imagen.url }}" 
                                                  alt="{{ carta.nombre }}"
-                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                                 class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
                                         </div>
                                     {% else %}
                                         <div class="aspect-[3/4] bg-gradient-to-br from-cosmic-800 to-cosmic-700 flex items-center justify-center">

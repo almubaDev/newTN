@@ -35,15 +35,15 @@
                 
                 <!-- Admin Dashboard - Solo para staff -->
                 {% if user.is_authenticated and user.is_staff %}
-                    <div class="relative group">
+                    <div class="relative admin-dropdown">
                         <a href="{% url 'oraculo:admin_dashboard' %}" 
-                           class="text-cosmic-300 hover:text-red-400 transition-colors duration-200 font-medium flex items-center">
+                           class="text-cosmic-300 hover:text-red-400 transition-colors duration-200 font-medium flex items-center admin-trigger">
                             <i class="fas fa-tools mr-2"></i>Admin
                             <i class="fas fa-chevron-down ml-1 text-xs"></i>
                         </a>
                         
-                        <!-- Dropdown de Admin -->
-                        <div class="absolute left-0 top-full mt-2 w-56 bg-cosmic-800 rounded-lg shadow-lg border border-red-500/20 py-2 hidden group-hover:block z-50">
+                        <!-- Dropdown de Admin - SIN MARGIN TOP -->
+                        <div class="admin-menu absolute left-0 top-full w-56 bg-cosmic-800 rounded-lg shadow-lg border border-red-500/20 py-2 hidden z-50">
                             <a href="{% url 'oraculo:admin_dashboard' %}" 
                                class="block px-4 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 transition-colors">
                                 <i class="fas fa-tachometer-alt mr-2 text-xs"></i>Dashboard Admin
@@ -58,7 +58,7 @@
                             </a>
                             <a href="{% url 'oraculo:mazo_list' %}" 
                                class="block px-4 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 transition-colors">
-                                <i class="fas fa-cards-blank mr-2 text-xs"></i>Gestionar Mazos
+                                <i class="fas fa-layer-group mr-2 text-xs"></i>Gestionar Mazos
                             </a>
                             <a href="{% url 'oraculo:carta_list' %}" 
                                class="block px-4 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 transition-colors">
@@ -118,38 +118,11 @@
                                 <i class="fas fa-key mr-2"></i>Cambiar Contraseña
                             </a>
                             
-                            <!-- Admin Links in Dropdown -->
-                            {% if user.is_staff %}
-                                <hr class="border-cosmic-600 my-2">
-                                <div class="px-4 py-2 text-xs text-cosmic-500 font-semibold uppercase tracking-wide">
-                                    Administración
-                                </div>
-                                <a href="{% url 'oraculo:admin_dashboard' %}" 
-                                   class="block px-4 py-2 text-cosmic-300 hover:text-red-400 hover:bg-cosmic-700/50 transition-colors">
-                                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard Admin
-                                </a>
-                                <a href="{% url 'oraculo:set_list' %}" 
-                                   class="block px-4 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 transition-colors">
-                                    <i class="fas fa-folder mr-2"></i>Gestionar Sets
-                                </a>
-                                <a href="{% url 'oraculo:mazo_list' %}" 
-                                   class="block px-4 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 transition-colors">
-                                    <i class="fas fa-cards-blank mr-2"></i>Gestionar Mazos
-                                </a>
-                                <a href="{% url 'tienda:admin_producto_list' %}" 
-                                   class="block px-4 py-2 text-cosmic-300 hover:text-green-400 hover:bg-cosmic-700/50 transition-colors">
-                                    <i class="fas fa-store mr-2"></i>Admin Tienda
-                                </a>
-                                <a href="{% url 'admin:index' %}" 
-                                   class="block px-4 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 transition-colors">
-                                    <i class="fas fa-database mr-2"></i>Admin Django
-                                </a>
-                            {% endif %}
-                            
                             <hr class="border-cosmic-600 my-2">
                             <a href="{% url 'user:logout' %}" 
                                class="block px-4 py-2 text-red-400 hover:text-red-300 hover:bg-cosmic-700/50 transition-colors">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                Cerrar Sesión
                             </a>
                         </div>
                     </div>
@@ -190,13 +163,13 @@
                 <i class="fas fa-cog mr-3"></i>Motor Náutica
             </a>
             
-            <!-- Tienda Mobile - Directo -->
+            <!-- Tienda Mobile -->
             <a href="{% url 'tienda:home' %}" 
                class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
                 <i class="fas fa-store mr-3"></i>Tienda
             </a>
             
-            <!-- Admin Dashboard Mobile - Solo para staff -->
+            <!-- Admin Dashboard Mobile -->
             {% if user.is_authenticated and user.is_staff %}
                 <div class="border-t border-cosmic-600 my-2"></div>
                 <div class="px-3 py-2 text-xs text-cosmic-500 font-semibold uppercase tracking-wide">
@@ -212,7 +185,7 @@
                 </a>
                 <a href="{% url 'oraculo:mazo_list' %}" 
                    class="block px-3 py-2 text-cosmic-300 hover:text-mystic-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
-                    <i class="fas fa-cards-blank mr-3"></i>Gestionar Mazos
+                    <i class="fas fa-layer-group mr-3"></i>Gestionar Mazos
                 </a>
                 <a href="{% url 'oraculo:carta_list' %}" 
                    class="block px-3 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
@@ -262,6 +235,37 @@
     </div>
 </nav>
 
+<style>
+    /* SOLUCION PARA EL DROPDOWN DE ADMIN */
+    .admin-dropdown:hover .admin-menu {
+        display: block !important;
+    }
+    
+    .admin-menu {
+        animation: fadeIn 0.15s ease-out;
+        /* ELIMINAR EL GAP - PEGARLO AL BOTON */
+        margin-top: 0px !important;
+        top: 100% !important;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* AREA INVISIBLE PARA CONECTAR BOTON CON DROPDOWN */
+    .admin-dropdown::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: 8px; /* Puente invisible */
+        background: transparent;
+        z-index: 40;
+    }
+</style>
+
 <script>
     // Mobile menu toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -285,7 +289,7 @@
         });
     });
     
-    // Desktop dropdown toggle
+    // User dropdown toggle (simple)
     function toggleDropdown() {
         const dropdown = document.getElementById('dropdown-menu');
         dropdown.classList.toggle('hidden');
@@ -296,15 +300,8 @@
         const dropdown = document.getElementById('dropdown-menu');
         const button = event.target.closest('.dropdown button');
         
-        if (!button && !dropdown.contains(event.target)) {
+        if (!button && dropdown && !dropdown.contains(event.target)) {
             dropdown.classList.add('hidden');
-        }
-    });
-    
-    // Close dropdown when pressing escape
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            document.getElementById('dropdown-menu').classList.add('hidden');
         }
     });
 </script>

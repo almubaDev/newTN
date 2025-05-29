@@ -4,7 +4,7 @@ from oraculo.models import Mazo
 
 class TarotProductForm(forms.ModelForm):
     """
-    Formulario para crear y editar productos de tarot
+    Formulario para crear y editar productos de tarot - VERSIÓN DEBUG
     """
     mazo = forms.ModelChoiceField(
         queryset=Mazo.objects.all(),
@@ -82,35 +82,79 @@ class TarotProductForm(forms.ModelForm):
             'descripcion_adicional', 'estado', 'destacado', 'orden'
         ]
     
-    def clean(self):
-        cleaned_data = super().clean()
-        precio = cleaned_data.get('precio')
-        precio_oferta = cleaned_data.get('precio_oferta')
-        mazo = cleaned_data.get('mazo')
-        
-        # Validar que el precio de oferta sea menor al precio normal
-        if precio_oferta and precio and precio_oferta >= precio:
-            raise forms.ValidationError(
-                'El precio de oferta debe ser menor al precio normal.'
-            )
-        
-        # Validar que el mazo no tenga ya un producto asociado (solo en creación)
-        if mazo and not self.instance.pk:
-            if hasattr(mazo, 'producto'):
-                raise forms.ValidationError(
-                    f'El mazo "{mazo.nombre}" ya tiene un producto asociado.'
-                )
-        
-        return cleaned_data
-    
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         
+        # DEBUG: Imprimir información de inicialización
+        print(f"Inicializando formulario TarotProduct")
+        print(f"Instance: {self.instance}")
+        print(f"Args: {args}")
+        print(f"Kwargs: {kwargs}")
+        
         # Filtrar solo mazos que no tienen producto asociado (en creación)
         if not self.instance.pk:
-            mazos_sin_producto = Mazo.objects.filter(producto__isnull=True)
-            self.fields['mazo'].queryset = mazos_sin_producto
+            try:
+                mazos_sin_producto = Mazo.objects.filter(producto__isnull=True)
+                print(f"Mazos sin producto encontrados: {mazos_sin_producto.count()}")
+                self.fields['mazo'].queryset = mazos_sin_producto
+            except Exception as e:
+                print(f"Error filtrando mazos: {e}")
+                # Si hay error, usar todos los mazos
+                self.fields['mazo'].queryset = Mazo.objects.all()
         
         # Mejorar la visualización de mazos en el select
-        self.fields['mazo'].queryset = self.fields['mazo'].queryset.select_related('set')
-        self.fields['mazo'].label_from_instance = lambda obj: f"{obj.nombre} ({obj.set.nombre})"
+        try:
+            self.fields['mazo'].queryset = self.fields['mazo'].queryset.select_related('set')
+            self.fields['mazo'].label_from_instance = lambda obj: f"{obj.nombre} ({obj.set.nombre})"
+        except Exception as e:
+            print(f"Error configurando queryset de mazos: {e}")
+    
+    def clean_precio_oferta(self):
+        """Validación simplificada del precio de oferta"""
+        precio_oferta = self.cleaned_data.get('precio_oferta')
+        precio = self.cleaned_data.get('precio')
+        
+        if precio_oferta and precio and precio_oferta >= precio:
+            raise forms.ValidationError('El precio de oferta debe ser menor al precio normal.')
+        
+        return precio_oferta
+    
+    def clean_mazo(self):
+        """Validación del mazo"""
+        mazo = self.cleaned_data.get('mazo')
+        
+        if not mazo:
+            raise forms.ValidationError('Debes seleccionar un mazo.')
+        
+        # Verificar que el mazo no tenga ya un producto asociado (solo en creación)
+        if not self.instance.pk:
+            try:
+                if hasattr(mazo, 'producto'):
+                    raise forms.ValidationError(f'El mazo "{mazo.nombre}" ya tiene un producto asociado.')
+            except TarotProduct.DoesNotExist:
+                # Esto está bien, el mazo no tiene producto
+                pass
+        
+        return mazo
+    
+    def clean(self):
+        """Validación general del formulario"""
+        cleaned_data = super().clean()
+        
+        # DEBUG: Imprimir datos limpios
+        print(f"Datos del formulario después de clean(): {cleaned_data}")
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        """Override del método save para debugging"""
+        print(f"Guardando producto, commit={commit}")
+        print(f"Datos a guardar: {self.cleaned_data}")
+        
+        try:
+            instance = super().save(commit=commit)
+            print(f"Producto guardado exitosamente: {instance}")
+            return instance
+        except Exception as e:
+            print(f"Error en save(): {e}")
+            raise
