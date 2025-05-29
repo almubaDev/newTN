@@ -44,7 +44,7 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         user.nombre = self.cleaned_data['nombre']
         # Dar créditos iniciales de bienvenida
-        user.creditos_disponibles = 5.00
+        user.creditos_disponibles = 0.00
         if commit:
             user.save()
         return user

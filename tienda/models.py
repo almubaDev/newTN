@@ -5,7 +5,7 @@ from oraculo.models import Mazo
 
 class TarotProduct(models.Model):
     """
-    Modelo para productos de tarot en la tienda
+    Modelo para productos de tarot en la tienda - CON MÉTODOS SEGUROS
     """
     ESTADO_CHOICES = [
         ('activo', 'Activo'),
@@ -72,7 +72,20 @@ class TarotProduct(models.Model):
         ordering = ['orden', '-destacado', '-fecha_creacion']
     
     def __str__(self):
-        return f"{self.mazo.nombre} - ${self.precio_actual}"
+        try:
+            return f"{self.mazo.nombre} - ${self.precio_actual}"
+        except:
+            return f"Producto {self.id} - ${self.precio_actual}"
+    
+    # ============== PROPIEDADES SEGURAS ============== #
+    
+    @property
+    def nombre_mazo(self):
+        """Nombre del mazo de forma segura"""
+        try:
+            return self.mazo.nombre
+        except:
+            return f"Mazo no disponible (ID: {self.mazo_id})"
     
     @property
     def precio_actual(self):
@@ -97,6 +110,40 @@ class TarotProduct(models.Model):
         """Verifica si el producto está disponible para compra"""
         return self.estado == 'activo'
     
+    # ============== MÉTODOS SEGUROS ============== #
+    
     def get_primeras_cartas(self, cantidad=5):
         """Retorna las primeras N cartas del mazo para mostrar en galería"""
-        return self.mazo.cartas.all().order_by('numero')[:cantidad]
+        try:
+            if hasattr(self, 'mazo') and self.mazo:
+                return self.mazo.cartas.all().order_by('numero')[:cantidad]
+        except:
+            pass
+        return []
+    
+    def get_total_cartas(self):
+        """Retorna el total de cartas del mazo de forma segura"""
+        try:
+            if hasattr(self, 'mazo') and self.mazo:
+                return self.mazo.total_cartas()
+        except:
+            pass
+        return 0
+    
+    def get_set_nombre(self):
+        """Retorna el nombre del set de forma segura"""
+        try:
+            if hasattr(self, 'mazo') and self.mazo and hasattr(self.mazo, 'set'):
+                return self.mazo.set.nombre
+        except:
+            pass
+        return "Set no disponible"
+    
+    def get_codigo_mazo(self):
+        """Retorna el código del mazo de forma segura"""
+        try:
+            if hasattr(self, 'mazo') and self.mazo:
+                return self.mazo.codigo
+        except:
+            pass
+        return "N/A"

@@ -65,17 +65,17 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('date_joined', 'last_login', 'last_updated')
     
     # Acciones personalizadas
-    actions = ['dar_creditos_bienvenida', 'resetear_creditos']
+    # actions = ['dar_creditos_bienvenida', 'resetear_creditos']
     
-    def dar_creditos_bienvenida(self, request, queryset):
-        """Acción para dar 5 créditos de bienvenida"""
-        for user in queryset:
-            user.agregar_creditos(5.00)
-        self.message_user(request, f'Se han agregado 5 créditos a {queryset.count()} usuarios.')
-    dar_creditos_bienvenida.short_description = "Dar 5 créditos de bienvenida"
+    # # def dar_creditos_bienvenida(self, request, queryset):
+    # #     """Acción para dar 5 créditos de bienvenida"""
+    # #     for user in queryset:
+    # #         user.agregar_creditos(5.00)
+    # #     self.message_user(request, f'Se han agregado 5 créditos a {queryset.count()} usuarios.')
+    # # dar_creditos_bienvenida.short_description = "Dar 5 créditos de bienvenida"
     
-    def resetear_creditos(self, request, queryset):
-        """Acción para resetear créditos a 0"""
-        queryset.update(creditos_disponibles=0.00)
-        self.message_user(request, f'Se han reseteado los créditos de {queryset.count()} usuarios.')
-    resetear_creditos.short_description = "Resetear créditos a 0"
+    # def resetear_creditos(self, request, queryset):
+    #     """Acción para resetear créditos a 0"""
+    #     queryset.update(creditos_disponibles=0.00)
+    #     self.message_user(request, f'Se han reseteado los créditos de {queryset.count()} usuarios.')
+    # resetear_creditos.short_description = "Resetear créditos a 0"
