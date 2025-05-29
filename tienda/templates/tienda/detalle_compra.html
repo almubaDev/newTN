@@ -1,0 +1,253 @@
+<!-- tienda/templates/tienda/detalle_compra.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm text-cosmic-400 mb-6">
+            <a href="{% url 'tienda:home' %}" class="hover:text-cosmic-200 transition-colors">Tienda</a>
+            <i class="fas fa-chevron-right mx-2"></i>
+            <a href="{% url 'tienda:mis_compras' %}" class="hover:text-cosmic-200 transition-colors">Mis Compras</a>
+            <i class="fas fa-chevron-right mx-2"></i>
+            <span class="text-primary-400">{{ compra.producto.mazo.nombre }}</span>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Información de la Compra -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Header de la Compra -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-primary-500/20">
+                    <div class="flex items-start justify-between mb-6">
+                        <div>
+                            <h1 class="text-3xl font-mystical font-bold text-primary-300 mb-2">
+                                {{ compra.producto.mazo.nombre }}
+                            </h1>
+                            <p class="text-lg text-mystic-400 mb-2">{{ compra.producto.mazo.set.nombre }}</p>
+                            <div class="flex items-center space-x-4 text-sm text-cosmic-400">
+                                <span>
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Comprado el {{ compra.fecha_compra|date:"d/m/Y H:i" }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-barcode mr-1"></i>
+                                    {{ compra.producto.mazo.codigo }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Estado de la compra -->
+                        <div class="text-right">
+                            {% if compra.estado == 'completada' %}
+                                <div class="bg-green-500/20 text-green-300 px-4 py-2 rounded-lg border border-green-500/30">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    <span class="font-semibold">Completada</span>
+                                </div>
+                            {% elif compra.estado == 'pendiente' %}
+                                <div class="bg-gold-500/20 text-gold-300 px-4 py-2 rounded-lg border border-gold-500/30">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    <span class="font-semibold">Pendiente</span>
+                                </div>
+                            {% elif compra.estado == 'cancelada' %}
+                                <div class="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg border border-red-500/30">
+                                    <i class="fas fa-times-circle mr-2"></i>
+                                    <span class="font-semibold">Cancelada</span>
+                                </div>
+                            {% elif compra.estado == 'reembolsada' %}
+                                <div class="bg-mystic-500/20 text-mystic-300 px-4 py-2 rounded-lg border border-mystic-500/30">
+                                    <i class="fas fa-undo mr-2"></i>
+                                    <span class="font-semibold">Reembolsada</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Detalles del pago -->
+                    <div class="grid md:grid-cols-3 gap-4 p-4 bg-cosmic-800/30 rounded-lg">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gold-400 mb-1">${{ compra.precio_pagado }}</div>
+                            <div class="text-sm text-cosmic-400">Precio Pagado</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-mystic-300 mb-1">{{ compra.get_metodo_pago_display }}</div>
+                            <div class="text-sm text-cosmic-400">Método de Pago</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-semibold text-primary-300 mb-1">
+                                {% if compra.referencia_pago %}
+                                    {{ compra.referencia_pago|truncatechars:15 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-cosmic-400">Referencia</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descripción del Mazo -->
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-mystic-500/20">
+                    <h3 class="text-xl font-mystical font-semibold text-mystic-300 mb-4">
+                        <i class="fas fa-align-left mr-2"></i>
+                        Descripción del Mazo
+                    </h3>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
+                            {{ compra.producto.mazo.descripcion }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cartas del Producto (solo si está completada) -->
+                {% if compra.puede_descargar and cartas_producto %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-green-500/20">
+                        <h3 class="text-xl font-mystical font-semibold text-green-300 mb-6">
+                            <i class="fas fa-download mr-2"></i>
+                            Tu Producto Digital
+                        </h3>
+                        
+                        <div class="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-400 mr-3 text-xl"></i>
+                                <div>
+                                    <h4 class="text-green-300 font-semibold">¡Compra Completada!</h4>
+                                    <p class="text-green-200 text-sm">
+                                        Ahora puedes ver todas las cartas de alta resolución de tu mazo
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid de todas las cartas -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {% for carta in cartas_producto %}
+                                <div class="bg-cosmic-800/50 rounded-lg overflow-hidden border border-green-500/20 hover:border-green-400/40 transition-all group cursor-pointer" onclick="showFullCardModal('{{ carta.imagen.url }}', '{{ carta.nombre }}', '{{ carta.numero }}')">
+                                    {% if carta.imagen %}
+                                        <img src="{{ carta.imagen.url }}" 
+                                             alt="{{ carta.nombre }}"
+                                             class="w-full object-contain group-hover:scale-105 transition-transform">
+                                    {% else %}
+                                        <div class="w-full aspect-[3/4] bg-cosmic-700 flex items-center justify-center">
+                                            <i class="fas fa-image text-cosmic-400"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="p-2">
+                                        <div class="text-xs text-green-400 font-bold">#{{ carta.numero }}</div>
+                                        <div class="text-xs text-cosmic-200 truncate">{{ carta.nombre }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <p class="text-sm text-green-200">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Haz clic en cualquier carta para verla en tamaño completo
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-8 space-y-6">
+                    <!-- Imagen del producto -->
+                    <div>
+                        <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-4">
+                            Imagen del Mazo
+                        </h3>
+                        {% if compra.producto.mazo.imagen_reverso %}
+                            <img src="{{ compra.producto.mazo.imagen_reverso.url }}" 
+                                 alt="{{ compra.producto.mazo.nombre }}"
+                                 class="w-full aspect-[3/4] object-cover rounded-xl border-2 border-gold-500/30">
+                        {% else %}
+                            <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-gold-500/30 flex items-center justify-center">
+                                <i class="fas fa-cards-blank text-4xl text-cosmic-400"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Información del producto -->
+                    <div>
+                        <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                            Detalles del Producto
+                        </h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-400">Total Cartas:</span>
+                                <span class="text-cosmic-200">{{ compra.producto.get_total_cartas }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-400">Set:</span>
+                                <span class="text-cosmic-200">{{ compra.producto.mazo.set.nombre }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-400">Código:</span>
+                                <span class="text-cosmic-200 font-mono">{{ compra.producto.mazo.codigo }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="space-y-3">
+                        <a href="{% url 'tienda:mis_compras' %}" 
+                           class="w-full bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center justify-center">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Volver a Mis Compras
+                        </a>
+                        
+                        {% if not compra.puede_descargar %}
+                            <div class="w-full bg-gold-500/20 text-gold-300 px-4 py-3 rounded-lg text-center text-sm border border-gold-500/30">
+                                <i class="fas fa-clock mr-2"></i>
+                                Producto disponible cuando se complete el pago
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver cartas completas -->
+<div id="fullCardModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4" onclick="closeFullCardModal()">
+    <div class="bg-cosmic-800 rounded-2xl p-6 max-w-lg w-full border border-primary-500/20" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="fullCardModalTitle" class="text-lg font-mystical font-semibold text-primary-300"></h3>
+            <button onclick="closeFullCardModal()" class="text-cosmic-400 hover:text-cosmic-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <img id="fullCardModalImage" src="" alt="" class="w-full aspect-[3/4] object-contain rounded-lg border border-gold-500/30">
+        <div class="mt-4 text-center">
+            <p class="text-xs text-cosmic-400">Imagen en alta resolución de tu compra</p>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Funciones del modal para cartas completas
+    function showFullCardModal(imageUrl, cardName, cardNumber) {
+        document.getElementById('fullCardModalImage').src = imageUrl;
+        document.getElementById('fullCardModalTitle').textContent = `#${cardNumber} - ${cardName}`;
+        document.getElementById('fullCardModal').classList.remove('hidden');
+    }
+
+    function closeFullCardModal() {
+        document.getElementById('fullCardModal').classList.add('hidden');
+    }
+
+    // Cerrar modal con escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeFullCardModal();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

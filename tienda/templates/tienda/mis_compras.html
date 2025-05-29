@@ -1,0 +1,247 @@
+<!-- tienda/templates/tienda/mis_compras.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'tienda:home' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <div class="flex-1">
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                        Mis Compras
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Productos que has adquirido en Tarotnaútica
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas del Usuario -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-primary-500/20 text-center">
+                <div class="text-2xl font-bold text-primary-300 mb-1">{{ stats.total_compras }}</div>
+                <div class="text-sm text-cosmic-400">Total Compras</div>
+            </div>
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-green-500/20 text-center">
+                <div class="text-2xl font-bold text-green-300 mb-1">{{ stats.completadas }}</div>
+                <div class="text-sm text-cosmic-400">Completadas</div>
+            </div>
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-4 border border-gold-500/20 text-center">
+                <div class="text-2xl font-bold text-gold-300 mb-1">{{ stats.pendientes }}</div>
+                <div class="text-sm text-cosmic-400">Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="mb-6">
+            <form method="GET" class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20">
+                <div class="grid md:grid-cols-3 gap-4">
+                    <!-- Búsqueda -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-search mr-2 text-primary-400"></i>
+                            Buscar en mis compras
+                        </label>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search|default:'' }}"
+                               placeholder="Buscar por producto o set..."
+                               class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-primary-500/30 text-cosmic-100 placeholder-cosmic-400 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-colors">
+                    </div>
+
+                    <!-- Estado -->
+                    <div>
+                        <label class="block text-sm font-medium text-cosmic-200 mb-2">
+                            <i class="fas fa-filter mr-2 text-mystic-400"></i>
+                            Estado
+                        </label>
+                        <select name="estado" 
+                                class="w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-mystic-500/30 text-cosmic-100 focus:outline-none focus:border-mystic-400 focus:ring-1 focus:ring-mystic-400 transition-colors">
+                            <option value="">Todos los Estados</option>
+                            {% for value, label in estados %}
+                                <option value="{{ value }}" {% if estado_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-6 pt-4 border-t border-cosmic-600">
+                    <button type="submit" 
+                            class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filtrar
+                    </button>
+                    
+                    <button type="button" 
+                            onclick="clearFilters()"
+                            class="border-2 border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-cosmic-900 px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Compras -->
+        {% if page_obj %}
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {% for compra in page_obj %}
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary-500/20 hover:border-primary-400/40 transition-all duration-300 group">
+                        <!-- Imagen del producto -->
+                        <div class="relative">
+                            {% if compra.producto.mazo.imagen_reverso %}
+                                <img src="{{ compra.producto.mazo.imagen_reverso.url }}" 
+                                     alt="{{ compra.producto.mazo.nombre }}"
+                                     class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300">
+                            {% else %}
+                                <div class="w-full h-40 bg-gradient-to-br from-cosmic-700 to-cosmic-800 flex items-center justify-center">
+                                    <i class="fas fa-cards-blank text-3xl text-cosmic-400"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Estado badge -->
+                            <div class="absolute top-2 right-2">
+                                {% if compra.estado == 'completada' %}
+                                    <span class="bg-green-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                        <i class="fas fa-check mr-1"></i>Completada
+                                    </span>
+                                {% elif compra.estado == 'pendiente' %}
+                                    <span class="bg-gold-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                        <i class="fas fa-clock mr-1"></i>Pendiente
+                                    </span>
+                                {% elif compra.estado == 'cancelada' %}
+                                    <span class="bg-red-500/90 text-white px-2 py-1 rounded-full text-xs font-bold">
+                                        <i class="fas fa-times mr-1"></i>Cancelada
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="p-4">
+                            <!-- Header -->
+                            <div class="mb-3">
+                                <h3 class="text-lg font-mystical font-semibold text-primary-300 group-hover:text-primary-200 transition-colors mb-1">
+                                    {{ compra.producto.mazo.nombre }}
+                                </h3>
+                                <div class="flex items-center justify-between text-xs text-cosmic-400">
+                                    <span class="bg-mystic-500/20 text-mystic-300 px-2 py-1 rounded">
+                                        {{ compra.producto.mazo.set.nombre }}
+                                    </span>
+                                    <span>{{ compra.fecha_compra|date:"d/m/Y" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Precio pagado -->
+                            <div class="mb-4">
+                                <span class="text-xl font-bold text-gold-400">
+                                    ${{ compra.precio_pagado }}
+                                </span>
+                                <span class="text-xs text-cosmic-400 ml-2">
+                                    {{ compra.get_metodo_pago_display }}
+                                </span>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="flex gap-2">
+                                {% if compra.puede_descargar %}
+                                    <a href="{% url 'tienda:detalle_compra' compra.id %}" 
+                                       class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
+                                        <i class="fas fa-download mr-1"></i>
+                                        Ver Producto
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'tienda:detalle_compra' compra.id %}" 
+                                       class="flex-1 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 text-center py-2 px-3 rounded-lg transition-colors text-sm">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        Ver Detalle
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+                <div class="flex justify-center items-center space-x-2 mb-8">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium">
+                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="px-3 py-2 rounded-lg bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600 transition-colors">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Estado vacío -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shopping-bag text-3xl text-cosmic-400"></i>
+                </div>
+                <h3 class="text-2xl font-mystical font-semibold text-cosmic-300 mb-4">
+                    No tienes compras aún
+                </h3>
+                <p class="text-cosmic-400 mb-8 max-w-md mx-auto">
+                    Explora nuestra tienda y encuentra el mazo perfecto para ti
+                </p>
+                <a href="{% url 'tienda:home' %}" 
+                   class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                    <i class="fas fa-store mr-2"></i>
+                    Explorar Tienda
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function clearFilters() {
+        window.location.href = '{% url "tienda:mis_compras" %}';
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit cuando cambia el select de estado
+        const estadoSelect = document.querySelector('select[name="estado"]');
+        if (estadoSelect) {
+            estadoSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

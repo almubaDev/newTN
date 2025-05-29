@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404
-from .models import TarotProduct
+from .models import TarotProduct, CompraProducto
 from .forms import TarotProductForm
 from oraculo.models import Set
 
@@ -470,3 +470,89 @@ def admin_producto_delete(request, pk):
         print(f"Error en admin_producto_delete: {e}")
         messages.error(request, f'Error al procesar eliminación: {str(e)}')
         return redirect('tienda:admin_producto_list')
+    
+
+# ============== VISTAS DE COMPRAS PARA CLIENTES ============== #
+
+@login_required
+def mis_compras(request):
+    """
+    Vista para que el usuario vea sus productos comprados
+    """
+    try:
+        compras = CompraProducto.objects.filter(
+            usuario=request.user
+        ).select_related('producto', 'producto__mazo', 'producto__mazo__set').order_by('-fecha_compra')
+        
+        # Filtros básicos
+        estado_filter = request.GET.get('estado')
+        if estado_filter:
+            compras = compras.filter(estado=estado_filter)
+        
+        # Búsqueda simple
+        search = request.GET.get('search')
+        if search:
+            compras = compras.filter(
+                Q(producto__mazo__nombre__icontains=search) |
+                Q(producto__mazo__set__nombre__icontains=search)
+            )
+        
+        # Paginación
+        paginator = Paginator(compras, 12)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Estadísticas básicas
+        stats = {
+            'total_compras': compras.count(),
+            'completadas': compras.filter(estado='completada').count(),
+            'pendientes': compras.filter(estado='pendiente').count(),
+        }
+        
+        context = {
+            'title': 'Mis Compras',
+            'page_obj': page_obj,
+            'stats': stats,
+            'estado_filter': estado_filter,
+            'search': search,
+            'estados': CompraProducto.ESTADO_COMPRA_CHOICES,
+        }
+        
+        return render(request, 'tienda/mis_compras.html', context)
+        
+    except Exception as e:
+        print(f"Error en mis_compras: {e}")
+        messages.error(request, 'Error al cargar tus compras.')
+        return redirect('tienda:home')
+
+@login_required
+def detalle_compra(request, compra_id):
+    """
+    Detalle de una compra específica del usuario
+    """
+    try:
+        compra = get_object_or_404(
+            CompraProducto.objects.select_related('producto', 'producto__mazo', 'producto__mazo__set'),
+            id=compra_id,
+            usuario=request.user
+        )
+        
+        # Cartas del producto (solo si la compra está completada)
+        cartas_producto = []
+        if compra.puede_descargar:
+            cartas_producto = compra.producto.mazo.cartas.all().order_by('numero')
+        
+        context = {
+            'title': f'Compra: {compra.nombre_producto}',
+            'compra': compra,
+            'cartas_producto': cartas_producto,
+        }
+        
+        return render(request, 'tienda/detalle_compra.html', context)
+        
+    except Exception as e:
+        print(f"Error en detalle_compra: {e}")
+        messages.error(request, 'Error al cargar el detalle de la compra.')
+        return redirect('tienda:mis_compras')
+
+

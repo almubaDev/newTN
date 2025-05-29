@@ -40,11 +40,15 @@
                         </h3>
                         <div class="grid grid-cols-5 gap-2">
                             {% for carta in cartas_galeria %}
-                                <div class="bg-cosmic-800/50 rounded-lg overflow-hidden border border-gold-500/20 hover:border-gold-400/40 transition-all group cursor-pointer" onclick="showCardModal('{{ carta.imagen.url }}', '{{ carta.nombre }}')">
+                                <div class="protected-card bg-cosmic-800/50 rounded-lg overflow-hidden border border-gold-500/20 hover:border-gold-400/40 transition-all group cursor-pointer" onclick="showCardModal('{{ carta.imagen.url }}', '{{ carta.nombre }}')">
                                     {% if carta.imagen %}
                                         <img src="{{ carta.imagen.url }}" 
                                              alt="{{ carta.nombre }}"
-                                             class="w-full object-containr group-hover:scale-105 transition-transform">
+                                             class="protected-image w-full object-contain group-hover:scale-105 transition-transform"
+                                             draggable="false"
+                                             oncontextmenu="return false;"
+                                             ondragstart="return false;"
+                                             onselectstart="return false;">
                                     {% else %}
                                         <div class="w-full aspect-[3/4] bg-cosmic-700 flex items-center justify-center">
                                             <i class="fas fa-image text-cosmic-400"></i>
@@ -172,37 +176,6 @@
                 {% endif %}
 
                 <!-- Detalles Técnicos -->
-                {% comment %} <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-xl p-6 border border-gold-500/20">
-                    <h3 class="text-lg font-mystical font-semibold text-gold-300 mb-4">
-                        <i class="fas fa-cog mr-2"></i>
-                        Especificaciones
-                    </h3>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-cosmic-300">Total de Cartas:</span>
-                                <span class="text-cosmic-100 font-semibold">{{ total_cartas }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-cosmic-300">Set:</span>
-                                <span class="text-cosmic-100">{{ producto.mazo.set.nombre }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-cosmic-300">Código:</span>
-                                <span class="text-cosmic-100 font-mono">{{ producto.mazo.codigo }}</span>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-cosmic-300">Agregado:</span>
-                                <span class="text-cosmic-100">{{ producto.fecha_creacion|date:"d/m/Y" }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-cosmic-300">Actualizado:</span>
-                                <span class="text-cosmic-100">{{ producto.fecha_actualizacion|date:"d/m/Y" }}</span>
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -253,7 +226,7 @@
     </div>
 </div>
 
-<!-- Modal para ver cartas -->
+<!-- Modal para ver cartas (FUNCIONALIDAD ORIGINAL MANTENIDA) -->
 <div id="cardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="closeCardModal()">
     <div class="bg-cosmic-800 rounded-2xl p-6 max-w-md w-full border border-primary-500/20" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
@@ -262,28 +235,97 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <img id="cardModalImage" src="" alt="" class="w-full aspect-[3/4] object-contain rounded-lg border border-gold-500/30">
+        <img id="cardModalImage" 
+             src="" 
+             alt="" 
+             class="protected-modal-image w-full aspect-[3/4] object-contain rounded-lg border border-gold-500/30"
+             draggable="false"
+             oncontextmenu="return false;"
+             ondragstart="return false;"
+             onselectstart="return false;">
     </div>
 </div>
 
+<style>
+/* Protección SOLO para evitar guardar/copiar - SIN bloquear funcionalidad */
+.protected-image, .protected-modal-image {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
+}
+
+.protected-card {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+/* Deshabilitar impresión de imágenes */
+@media print {
+    .protected-image, .protected-modal-image {
+        display: none !important;
+    }
+}
+</style>
+
 {% block extra_js %}
 <script>
-    function showCardModal(imageUrl, cardName) {
-        document.getElementById('cardModalImage').src = imageUrl;
-        document.getElementById('cardModalTitle').textContent = cardName;
-        document.getElementById('cardModal').classList.remove('hidden');
+// Funciones originales del modal (MANTENIDAS)
+function showCardModal(imageUrl, cardName) {
+    document.getElementById('cardModalImage').src = imageUrl;
+    document.getElementById('cardModalTitle').textContent = cardName;
+    document.getElementById('cardModal').classList.remove('hidden');
+}
+
+function closeCardModal() {
+    document.getElementById('cardModal').classList.add('hidden');
+}
+
+// Cerrar modal con escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCardModal();
     }
+});
+
+// Protección SOLO contra guardar/copiar (SIN bloquear funcionalidad)
+document.addEventListener('DOMContentLoaded', function() {
+    // Protección específica para imágenes
+    document.querySelectorAll('.protected-image, .protected-modal-image').forEach(function(img) {
+        // Prevenir menú contextual
+        img.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Prevenir arrastrar
+        img.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Prevenir selección
+        img.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    });
     
-    function closeCardModal() {
-        document.getElementById('cardModal').classList.add('hidden');
-    }
-    
-    // Close modal with escape key
+    // Prevenir Ctrl+S solo en imágenes protegidas
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeCardModal();
+        if (e.ctrlKey && e.keyCode === 83) { // Ctrl+S
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.classList.contains('protected-image') || activeElement.classList.contains('protected-modal-image'))) {
+                e.preventDefault();
+                return false;
+            }
         }
     });
+});
 </script>
 {% endblock %}
 {% endblock %}

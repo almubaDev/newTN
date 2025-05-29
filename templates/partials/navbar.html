@@ -109,6 +109,10 @@
                         </button>
                         
                         <div id="dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-cosmic-800 rounded-lg shadow-lg border border-primary-500/20 py-2 hidden">
+                            <a href="{% url 'tienda:mis_compras' %}" 
+                               class="block px-4 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 transition-colors">
+                                <i class="fas fa-shopping-bag mr-2"></i>Mis Compras
+                            </a>
                             <a href="{% url 'user:profile' %}" 
                                class="block px-4 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 transition-colors">
                                 <i class="fas fa-user mr-2"></i>Mi Perfil
