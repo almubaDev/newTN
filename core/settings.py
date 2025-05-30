@@ -1,4 +1,5 @@
 import os
+from decouple import config
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -54,6 +55,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'finanzas.context_processors.paypal_settings', 
             ],
         },
     },
@@ -157,3 +159,20 @@ IMAGE_PRESERVE_LAYERS = True
 # Configuración de Pillow para no procesar automáticamente
 PILLOW_DISABLE_OPTIMIZE = True
 PILLOW_DISABLE_PROGRESSIVE = True
+
+
+
+# ============== CONFIGURACIÓN PAYPAL ============== #
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
+PAYPAL_MODE = config('PAYPAL_MODE', default='sandbox')  # 'sandbox' o 'live'
+PAYPAL_WEBHOOK_ID = config('PAYPAL_WEBHOOK_ID', default='')
+
+# URLs de PayPal
+if PAYPAL_MODE == 'live':
+    PAYPAL_BASE_URL = 'https://api.paypal.com'
+else:
+    PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com'
+
+# Configuración adicional para webhooks
+PAYPAL_WEBHOOK_URL = f"{config('DOMAIN_URL', default='https://tarotnautica.store')}/cart/webhook/paypal/"

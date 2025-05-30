@@ -1,0 +1,246 @@
+<!-- finanzas/templates/finanzas/pago_exitoso.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header de Éxito -->
+        <div class="text-center mb-12">
+            <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check-circle text-4xl text-green-400"></i>
+            </div>
+            <h1 class="text-4xl font-mystical font-bold text-green-300 mb-4">
+                ¡Pago Exitoso!
+            </h1>
+            <p class="text-xl text-cosmic-300 mb-2">
+                Tu compra ha sido procesada correctamente
+            </p>
+            <p class="text-cosmic-400">
+                Orden: <span class="text-primary-400 font-mono">#{{ orden.codigo_orden }}</span>
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Detalles de la Orden -->
+            <div class="lg:col-span-2">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-green-500/20">
+                    <h2 class="text-2xl font-mystical font-semibold text-green-300 mb-6">
+                        <i class="fas fa-receipt mr-2"></i>
+                        Detalles de tu Compra
+                    </h2>
+
+                    <!-- Estado del Pago -->
+                    <div class="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-credit-card text-green-400 mr-3 text-xl"></i>
+                            <div>
+                                <h4 class="text-green-300 font-semibold">Estado del Pago</h4>
+                                <p class="text-green-200 text-sm">
+                                    {% if orden.estado == 'pagada' %}
+                                        ✅ Pago completado y verificado
+                                    {% elif orden.estado == 'aprobada' %}
+                                        🔄 Pago aprobado, procesando...
+                                    {% else %}
+                                        ⏳ Procesando pago...
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productos Comprados -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-cosmic-200 mb-4">
+                            Productos Adquiridos
+                        </h3>
+                        
+                        {% for item in orden.items.all %}
+                            <div class="flex items-center space-x-4 p-4 bg-cosmic-800/50 rounded-lg border border-gold-500/20">
+                                <!-- Imagen del producto -->
+                                <div class="flex-shrink-0">
+                                    {% if item.producto.mazo.imagen_reverso %}
+                                        <img src="{{ item.producto.mazo.imagen_reverso.url }}" 
+                                             alt="{{ item.producto.mazo.nombre }}"
+                                             class="w-16 h-16 object-cover rounded-lg border border-gold-500/30">
+                                    {% else %}
+                                        <div class="w-16 h-16 bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-lg border border-gold-500/30 flex items-center justify-center">
+                                            <i class="fas fa-cards-blank text-cosmic-400"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Información del producto -->
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-primary-300">
+                                        {{ item.producto.mazo.nombre }}
+                                    </h4>
+                                    <p class="text-sm text-mystic-400">
+                                        {{ item.producto.mazo.set.nombre }}
+                                    </p>
+                                    <div class="flex items-center space-x-4 text-sm text-cosmic-400 mt-1">
+                                        <span>
+                                            <i class="fas fa-layer-group mr-1"></i>
+                                            {{ item.producto.get_total_cartas }} cartas
+                                        </span>
+                                        <span>Cantidad: {{ item.cantidad }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Precio -->
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-gold-400">
+                                        ${{ item.subtotal }}
+                                    </div>
+                                    {% if item.cantidad > 1 %}
+                                        <div class="text-xs text-cosmic-400">
+                                            ${{ item.precio_unitario }} × {{ item.cantidad }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Información de Acceso -->
+                    {% if orden.estado == 'pagada' %}
+                        <div class="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-download text-blue-400 mr-3 text-xl mt-1"></i>
+                                <div>
+                                    <h4 class="text-blue-300 font-semibold mb-2">Acceso a tus Productos</h4>
+                                    <p class="text-blue-200 text-sm mb-3">
+                                        Tus productos digitales ya están disponibles en tu cuenta.
+                                    </p>
+                                    <a href="{% url 'tienda:mis_compras' %}" 
+                                       class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors font-semibold">
+                                        <i class="fas fa-arrow-right mr-2"></i>
+                                        Ver Mis Compras
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Resumen de Pago -->
+            <div class="lg:col-span-1">
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-8">
+                    <h3 class="text-xl font-mystical font-semibold text-primary-300 mb-6">
+                        Resumen de Pago
+                    </h3>
+
+                    <!-- Detalles del Pago -->
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-cosmic-300">
+                            <span>Subtotal:</span>
+                            <span>${{ orden.subtotal }}</span>
+                        </div>
+                        
+                        <div class="border-t border-cosmic-600 pt-4">
+                            <div class="flex justify-between text-lg font-bold text-gold-400">
+                                <span>Total Pagado:</span>
+                                <span>${{ orden.total }} {{ orden.moneda }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de la Orden -->
+                    <div class="space-y-3 text-sm border-t border-cosmic-600 pt-4">
+                        <div class="flex justify-between">
+                            <span class="text-cosmic-400">Orden:</span>
+                            <span class="text-cosmic-200 font-mono">#{{ orden.codigo_orden }}</span>
+                        </div>
+                        
+                        {% if orden.paypal_order_id %}
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-400">PayPal ID:</span>
+                                <span class="text-cosmic-200 font-mono text-xs">{{ orden.paypal_order_id|truncatechars:12 }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex justify-between">
+                            <span class="text-cosmic-400">Fecha:</span>
+                            <span class="text-cosmic-200">{{ orden.fecha_creacion|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        
+                        {% if orden.fecha_pago %}
+                            <div class="flex justify-between">
+                                <span class="text-cosmic-400">Pago:</span>
+                                <span class="text-cosmic-200">{{ orden.fecha_pago|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="space-y-3 mt-6">
+                        {% if orden.estado == 'pagada' %}
+                            <a href="{% url 'tienda:mis_compras' %}" 
+                               class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-3 px-6 rounded-lg font-semibold text-center transition-all duration-300 inline-block">
+                                <i class="fas fa-download mr-2"></i>
+                                Acceder a Productos
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'tienda:home' %}" 
+                           class="w-full border-2 border-primary-500 text-primary-400 hover:bg-primary-500 hover:text-white py-3 px-6 rounded-lg font-semibold text-center transition-all duration-300 inline-block">
+                            <i class="fas fa-store mr-2"></i>
+                            Seguir Comprando
+                        </a>
+                    </div>
+
+                    <!-- Soporte -->
+                    <div class="mt-6 pt-4 border-t border-cosmic-600">
+                        <h4 class="text-sm font-semibold text-cosmic-300 mb-3">¿Necesitas Ayuda?</h4>
+                        <p class="text-xs text-cosmic-400 mb-3">
+                            Si tienes algún problema con tu compra, contáctanos.
+                        </p>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center text-cosmic-400">
+                                <i class="fas fa-envelope mr-2"></i>
+                                <span>soporte@tarotnautica.store</span>
+                            </div>
+                            <div class="flex items-center text-cosmic-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>Respuesta en 24-48 horas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de Confirmación por Email -->
+        <div class="mt-8 text-center p-6 bg-mystic-500/10 border border-mystic-500/30 rounded-2xl">
+            <i class="fas fa-envelope text-mystic-400 text-2xl mb-3"></i>
+            <h3 class="text-lg font-semibold text-mystic-300 mb-2">
+                Confirmación por Email
+            </h3>
+            <p class="text-mystic-200 text-sm">
+                Hemos enviado una confirmación de tu compra a <strong>{{ orden.usuario.email }}</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Confetti celebration animation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Simple confetti effect (optional)
+        console.log('🎉 ¡Compra exitosa!');
+        
+        // Auto-refresh si el pago aún está procesando
+        {% if orden.estado != 'pagada' %}
+            setTimeout(() => {
+                location.reload();
+            }, 5000); // Recargar cada 5 segundos hasta que esté pagado
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}

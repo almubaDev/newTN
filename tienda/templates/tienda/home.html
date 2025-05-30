@@ -55,13 +55,23 @@
         <div class="lg:grid lg:grid-cols-4 lg:gap-8">
             <!-- Sidebar de Filtros -->
             <div class="lg:col-span-1 mb-8 lg:mb-0">
-                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-24">
-                    <h3 class="text-lg font-mystical font-semibold text-primary-300 mb-6">
-                        <i class="fas fa-filter mr-2"></i>
-                        Filtros
-                    </h3>
+                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl border border-primary-500/20 sticky top-24">
+                    <!-- Header de Filtros (Mobile Collapsible) -->
+                    <div class="p-6 lg:pb-6">
+                        <button onclick="toggleMobileFilters()" 
+                                class="w-full flex items-center justify-between lg:cursor-default lg:pointer-events-none">
+                            <h3 class="text-lg font-mystical font-semibold text-primary-300">
+                                <i class="fas fa-filter mr-2"></i>
+                                Filtros
+                            </h3>
+                            <i id="filter-toggle-icon" class="fas fa-chevron-down text-primary-400 lg:hidden transition-transform duration-300"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Contenido de Filtros (Collapsible en Mobile) -->
+                    <div id="mobile-filters-content" class="hidden lg:block px-6 pb-6">
 
-                    <form method="GET" id="sidebar-filters" class="space-y-6">
+                        <form method="GET" id="sidebar-filters" class="space-y-6">
                         <!-- Mantener la categoría actual -->
                         {% if request.GET.categoria %}
                             <input type="hidden" name="categoria" value="{{ request.GET.categoria }}">
@@ -138,26 +148,27 @@
                             <i class="fas fa-times mr-1"></i>
                             Limpiar Filtros
                         </button>
-                    </form>
+                        </form>
 
-                    <!-- Admin Actions -->
-                    {% if user.is_staff %}
-                        <div class="mt-6 pt-4 border-t border-cosmic-600">
-                            <h4 class="text-sm font-semibold text-cosmic-300 mb-3">Administración</h4>
-                            <div class="space-y-2">
-                                <a href="{% url 'tienda:admin_producto_create' %}" 
-                                   class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
-                                    <i class="fas fa-plus mr-2"></i>
-                                    Agregar Producto
-                                </a>
-                                <a href="{% url 'tienda:admin_producto_list' %}" 
-                                   class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
-                                    <i class="fas fa-cog mr-2"></i>
-                                    Administrar Productos
-                                </a>
+                        <!-- Admin Actions -->
+                        {% if user.is_staff %}
+                            <div class="mt-6 pt-4 border-t border-cosmic-600">
+                                <h4 class="text-sm font-semibold text-cosmic-300 mb-3">Administración</h4>
+                                <div class="space-y-2">
+                                    <a href="{% url 'tienda:admin_producto_create' %}" 
+                                       class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Agregar Producto
+                                    </a>
+                                    <a href="{% url 'tienda:admin_producto_list' %}" 
+                                       class="block text-gold-400 hover:text-gold-300 transition-colors text-sm">
+                                        <i class="fas fa-cog mr-2"></i>
+                                        Administrar Productos
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -250,13 +261,22 @@
 
                                     <!-- Botones -->
                                     <div class="flex gap-2">
-                                        <a href="{{ producto.link_compra }}" 
-                                           target="_blank" 
-                                           rel="noopener noreferrer"
-                                           class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
-                                            <i class="fas fa-shopping-cart mr-1"></i>
-                                            ${{ producto.precio_actual }}
-                                        </a>
+                                        <!-- BOTÓN ACTUALIZADO PARA CARRITO -->
+                                        {% if user.is_authenticated %}
+                                            <button onclick="agregarAlCarrito({{ producto.id }})"
+                                                    id="btn-producto-{{ producto.id }}"
+                                                    class="flex-1 bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
+                                                <i class="fas fa-shopping-cart mr-1"></i>
+                                                ${{ producto.precio_actual }}
+                                            </button>
+                                        {% else %}
+                                            <a href="{% url 'user:login' %}?next={% url 'tienda:home' %}"
+                                               class="flex-1 bg-gradient-to-r from-cosmic-600 to-cosmic-500 hover:from-cosmic-500 hover:to-cosmic-400 text-white text-center py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">
+                                                <i class="fas fa-sign-in-alt mr-1"></i>
+                                                Iniciar Sesión
+                                            </a>
+                                        {% endif %}
+                                        
                                         <a href="{% url 'tienda:producto_detail' producto.pk %}" 
                                            class="bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-2 px-3 rounded-lg transition-colors">
                                             <i class="fas fa-eye"></i>
@@ -345,7 +365,168 @@
 </div>
 
 {% block extra_js %}
+<style>
+/* Animación para el despliegue de filtros */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slideDown {
+    animation: slideDown 0.3s ease-out;
+}
+</style>
+
 <script>
+    // Función para toggle de filtros en mobile
+    function toggleMobileFilters() {
+        const content = document.getElementById('mobile-filters-content');
+        const icon = document.getElementById('filter-toggle-icon');
+        
+        if (content.classList.contains('hidden')) {
+            // Mostrar filtros
+            content.classList.remove('hidden');
+            content.classList.add('animate-slideDown');
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            // Ocultar filtros
+            content.classList.add('hidden');
+            content.classList.remove('animate-slideDown');
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // CSRF Token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Función para agregar productos al carrito
+    function agregarAlCarrito(productoId) {
+        const btn = document.getElementById(`btn-producto-${productoId}`);
+        const originalContent = btn.innerHTML;
+        
+        // Mostrar estado de carga
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Agregando...';
+        btn.disabled = true;
+        
+        fetch(`/cart/carrito/agregar/${productoId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Éxito - cambiar botón temporalmente
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>¡Agregado!';
+                btn.classList.remove('from-green-500', 'to-primary-500', 'hover:from-green-600', 'hover:to-primary-600');
+                btn.classList.add('from-green-600', 'to-green-700');
+                
+                // Actualizar badge del carrito en navbar
+                actualizarBadgeCarrito();
+                
+                // Mostrar mensaje de éxito
+                mostrarMensaje(data.message, 'success');
+                
+                // Restaurar botón después de 2 segundos
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('from-green-600', 'to-green-700');
+                    btn.classList.add('from-green-500', 'to-primary-500', 'hover:from-green-600', 'hover:to-primary-600');
+                    btn.disabled = false;
+                }, 2000);
+                
+            } else {
+                // Error
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                mostrarMensaje(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            mostrarMensaje('Error al agregar al carrito', 'error');
+        });
+    }
+
+    // Actualizar badge del carrito
+    function actualizarBadgeCarrito() {
+        fetch('/cart/api/carrito-widget/')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('carrito-badge');
+                const mobileBadge = document.getElementById('mobile-carrito-badge');
+                
+                if (data.total_items > 0) {
+                    if (badge) {
+                        badge.textContent = data.total_items;
+                        badge.classList.remove('hidden');
+                    }
+                    if (mobileBadge) {
+                        mobileBadge.textContent = data.total_items;
+                        mobileBadge.classList.remove('hidden');
+                    }
+                } else {
+                    if (badge) badge.classList.add('hidden');
+                    if (mobileBadge) mobileBadge.classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.log('Error actualizando badge del carrito:', error);
+            });
+    }
+
+    // Mostrar mensajes de notificación
+    function mostrarMensaje(mensaje, tipo) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `fixed top-20 right-4 px-6 py-3 rounded-lg z-50 ${
+            tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white font-semibold transform transition-all duration-300`;
+        messageDiv.textContent = mensaje;
+        
+        // Añadir al DOM con animación
+        messageDiv.style.transform = 'translateX(100%)';
+        document.body.appendChild(messageDiv);
+        
+        // Animar entrada
+        setTimeout(() => {
+            messageDiv.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            messageDiv.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    // Función original para limpiar filtros
     function clearFilters() {
         // Mantener solo la categoría si existe
         const categoria = new URLSearchParams(window.location.search).get('categoria');
@@ -354,10 +535,6 @@
         } else {
             window.location.href = '{% url "tienda:home" %}';
         }
-    }
-    
-    function updateCheckboxUI(checkbox) {
-        // Ya no necesitamos esta función porque usamos checkboxes normales de Tailwind
     }
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -393,6 +570,19 @@
             ordenSelect.addEventListener('change', function() {
                 document.getElementById('sidebar-filters').submit();
             });
+        }
+
+        // Actualizar badge del carrito al cargar la página
+        actualizarBadgeCarrito();
+        
+        // Inicializar estado de filtros móviles (cerrados por defecto)
+        const filterContent = document.getElementById('mobile-filters-content');
+        const filterIcon = document.getElementById('filter-toggle-icon');
+        
+        // Solo en móvil, mantener filtros cerrados por defecto
+        if (window.innerWidth < 1024) {
+            filterContent.classList.add('hidden');
+            filterIcon.style.transform = 'rotate(0deg)';
         }
     });
 </script>

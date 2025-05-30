@@ -129,15 +129,22 @@
                         {% endif %}
                     </div>
 
-                    <!-- Botón de compra -->
+                    <!-- Botón de compra ACTUALIZADO -->
                     {% if producto.estado == 'activo' %}
-                        <a href="{{ producto.link_compra }}" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 inline-block">
-                            <i class="fas fa-shopping-cart mr-2"></i>
-                            Comprar por ${{ producto.precio_actual }}
-                        </a>
+                        {% if user.is_authenticated %}
+                            <button onclick="agregarAlCarrito({{ producto.id }})"
+                                    id="btn-producto-{{ producto.id }}"
+                                    class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white text-center py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                Agregar al Carrito - ${{ producto.precio_actual }}
+                            </button>
+                        {% else %}
+                            <a href="{% url 'user:login' %}?next={% url 'tienda:producto_detail' producto.id %}"
+                               class="w-full bg-gradient-to-r from-cosmic-600 to-cosmic-500 hover:from-cosmic-500 hover:to-cosmic-400 text-white text-center py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 inline-block">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Iniciar Sesión para Comprar
+                            </a>
+                        {% endif %}
                     {% else %}
                         <button disabled 
                                 class="w-full bg-cosmic-600 text-cosmic-400 cursor-not-allowed py-4 px-6 rounded-lg font-bold text-lg">
@@ -274,6 +281,130 @@
 
 {% block extra_js %}
 <script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Función para agregar productos al carrito
+function agregarAlCarrito(productoId) {
+    const btn = document.getElementById(`btn-producto-${productoId}`);
+    const originalContent = btn.innerHTML;
+    
+    // Mostrar estado de carga
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Agregando al Carrito...';
+    btn.disabled = true;
+    
+    fetch(`/cart/carrito/agregar/${productoId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Éxito - cambiar botón temporalmente
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>¡Agregado al Carrito!';
+            btn.classList.remove('from-green-500', 'to-primary-500', 'hover:from-green-600', 'hover:to-primary-600');
+            btn.classList.add('from-green-600', 'to-green-700');
+            
+            // Actualizar badge del carrito en navbar
+            actualizarBadgeCarrito();
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje(data.message, 'success');
+            
+            // Restaurar botón después de 3 segundos
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('from-green-600', 'to-green-700');
+                btn.classList.add('from-green-500', 'to-primary-500', 'hover:from-green-600', 'hover:to-primary-600');
+                btn.disabled = false;
+            }, 3000);
+            
+        } else {
+            // Error
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        mostrarMensaje('Error al agregar al carrito', 'error');
+    });
+}
+
+// Actualizar badge del carrito
+function actualizarBadgeCarrito() {
+    fetch('/cart/api/carrito-widget/')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('carrito-badge');
+            const mobileBadge = document.getElementById('mobile-carrito-badge');
+            
+            if (data.total_items > 0) {
+                if (badge) {
+                    badge.textContent = data.total_items;
+                    badge.classList.remove('hidden');
+                }
+                if (mobileBadge) {
+                    mobileBadge.textContent = data.total_items;
+                    mobileBadge.classList.remove('hidden');
+                }
+            } else {
+                if (badge) badge.classList.add('hidden');
+                if (mobileBadge) mobileBadge.classList.add('hidden');
+            }
+        })
+        .catch(error => {
+            console.log('Error actualizando badge del carrito:', error);
+        });
+}
+
+// Mostrar mensajes de notificación
+function mostrarMensaje(mensaje, tipo) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `fixed top-20 right-4 px-6 py-3 rounded-lg z-50 ${
+        tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-semibold transform transition-all duration-300`;
+    messageDiv.textContent = mensaje;
+    
+    // Añadir al DOM con animación
+    messageDiv.style.transform = 'translateX(100%)';
+    document.body.appendChild(messageDiv);
+    
+    // Animar entrada
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remover después de 4 segundos (más tiempo que en home)
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 300);
+    }, 4000);
+}
+
 // Funciones originales del modal (MANTENIDAS)
 function showCardModal(imageUrl, cardName) {
     document.getElementById('cardModalImage').src = imageUrl;
@@ -325,6 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Actualizar badge del carrito al cargar la página
+    actualizarBadgeCarrito();
 });
 </script>
 {% endblock %}

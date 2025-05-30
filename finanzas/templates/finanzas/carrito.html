@@ -36,7 +36,7 @@
                                 <h2 class="text-xl font-mystical font-semibold text-primary-300">
                                     Productos en tu Carrito
                                 </h2>
-                                <button onclick="limpiarCarrito()" 
+                                <button onclick="mostrarModalVaciarCarrito()" 
                                         class="text-red-400 hover:text-red-300 transition-colors text-sm">
                                     <i class="fas fa-trash mr-1"></i>
                                     Vaciar Carrito
@@ -47,7 +47,7 @@
                         <!-- Items del carrito -->
                         <div class="divide-y divide-cosmic-600">
                             {% for item in items %}
-                                <div class="p-6 item-carrito" data-item-id="{{ item.id }}">
+                                <div class="p-6 item-carrito" data-item-id="{{ item.id }}" id="item-{{ item.id }}">
                                     <div class="flex items-center space-x-4">
                                         <!-- Imagen del producto -->
                                         <div class="flex-shrink-0">
@@ -84,7 +84,7 @@
                                         <!-- Controles de cantidad -->
                                         <div class="flex items-center space-x-3">
                                             <button onclick="actualizarCantidad({{ item.id }}, {{ item.cantidad|add:'-1' }})"
-                                                    class="w-8 h-8 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 rounded-full flex items-center justify-center transition-colors"
+                                                    class="w-8 h-8 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 rounded-full flex items-center justify-center transition-colors {% if item.cantidad <= 1 %}opacity-50 cursor-not-allowed{% endif %}"
                                                     {% if item.cantidad <= 1 %}disabled{% endif %}>
                                                 <i class="fas fa-minus text-xs"></i>
                                             </button>
@@ -104,7 +104,7 @@
                                             <div class="text-xl font-bold text-green-400 subtotal-{{ item.id }}">
                                                 ${{ item.subtotal }}
                                             </div>
-                                            <button onclick="eliminarDelCarrito({{ item.id }})"
+                                            <button onclick="mostrarModalEliminar({{ item.id }}, '{{ item.producto.mazo.nombre }}')"
                                                     class="text-red-400 hover:text-red-300 transition-colors text-sm mt-1">
                                                 <i class="fas fa-trash mr-1"></i>
                                                 Eliminar
@@ -139,11 +139,23 @@
                         </div>
 
                         <div class="space-y-3">
-                            <a href="{% url 'finanzas:checkout' %}" 
-                               class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-3 px-6 rounded-lg font-bold text-center transition-all duration-300 transform hover:scale-105 inline-block">
-                                <i class="fas fa-credit-card mr-2"></i>
-                                Proceder al Pago
-                            </a>
+                            <!-- Botón PayPal -->
+                            <div id="paypal-button-container" class="w-full"></div>
+                            
+                            <!-- Mensaje de carga -->
+                            <div id="paypal-loading" class="w-full bg-gradient-to-r from-blue-500 to-primary-500 text-white py-3 px-6 rounded-lg font-bold text-center">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Cargando PayPal...
+                            </div>
+                            
+                            <!-- Botón de respaldo si PayPal falla -->
+                            <div id="paypal-fallback" class="hidden">
+                                <button onclick="procesarPagoManual()" 
+                                        class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-3 px-6 rounded-lg font-bold text-center transition-all duration-300 transform hover:scale-105">
+                                    <i class="fas fa-credit-card mr-2"></i>
+                                    Proceder al Pago
+                                </button>
+                            </div>
                             
                             <a href="{% url 'tienda:home' %}" 
                                class="w-full border-2 border-primary-500 text-primary-400 hover:bg-primary-500 hover:text-white py-3 px-6 rounded-lg font-semibold text-center transition-all duration-300 inline-block">
@@ -176,8 +188,70 @@
     </div>
 </div>
 
+<!-- Modal para Eliminar Item -->
+<div id="modalEliminarItem" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="cerrarModalEliminar()">
+    <div class="bg-cosmic-800 rounded-2xl p-6 max-w-md w-full border border-red-500/30" onclick="event.stopPropagation()">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash text-2xl text-red-400"></i>
+            </div>
+            <h3 class="text-xl font-mystical font-semibold text-red-300 mb-4">
+                Eliminar Producto
+            </h3>
+            <p class="text-cosmic-300 mb-6">
+                ¿Estás seguro de que quieres eliminar <strong id="nombreProductoEliminar"></strong> de tu carrito?
+            </p>
+            <div class="flex gap-3">
+                <button onclick="cerrarModalEliminar()" 
+                        class="flex-1 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-3 px-4 rounded-lg font-semibold transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="confirmarEliminar()" 
+                        id="btnConfirmarEliminar"
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Vaciar Carrito -->
+<div id="modalVaciarCarrito" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="cerrarModalVaciarCarrito()">
+    <div class="bg-cosmic-800 rounded-2xl p-6 max-w-md w-full border border-red-500/30" onclick="event.stopPropagation()">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash-alt text-2xl text-red-400"></i>
+            </div>
+            <h3 class="text-xl font-mystical font-semibold text-red-300 mb-4">
+                Vaciar Carrito
+            </h3>
+            <p class="text-cosmic-300 mb-6">
+                ¿Estás seguro de que quieres eliminar <strong>todos los productos</strong> de tu carrito? Esta acción no se puede deshacer.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="cerrarModalVaciarCarrito()" 
+                        class="flex-1 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 py-3 px-4 rounded-lg font-semibold transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="confirmarVaciarCarrito()" 
+                        id="btnConfirmarVaciar"
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                    Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}
+<!-- PayPal SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ settings.PAYPAL_CLIENT_ID }}&currency=USD&intent=capture"></script>
+
 <script>
+// Variables globales para modales
+let itemIdParaEliminar = null;
+
 // CSRF Token
 function getCookie(name) {
     let cookieValue = null;
@@ -198,7 +272,14 @@ function getCookie(name) {
 function actualizarCantidad(itemId, nuevaCantidad) {
     if (nuevaCantidad < 1) return;
     
-    fetch(`/finanzas/carrito/actualizar/${itemId}/`, {
+    // Deshabilitar botones temporalmente
+    const btnMenos = document.querySelector(`button[onclick*="actualizarCantidad(${itemId}, ${nuevaCantidad - 1})"]`);
+    const btnMas = document.querySelector(`button[onclick*="actualizarCantidad(${itemId}, ${nuevaCantidad + 1})"]`);
+    
+    if (btnMenos) btnMenos.disabled = true;
+    if (btnMas) btnMas.disabled = true;
+    
+    fetch(`/cart/carrito/actualizar/${itemId}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -222,8 +303,15 @@ function actualizarCantidad(itemId, nuevaCantidad) {
             document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
             document.getElementById('total').textContent = `$${data.total_carrito}`;
             
+            // Actualizar badge del navbar
+            actualizarBadgeCarrito();
+            
             // Mostrar mensaje de éxito
             mostrarMensaje(data.message, 'success');
+            
+            // Actualizar onclick de los botones
+            actualizarBotonesControles(itemId, nuevaCantidad);
+            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -231,16 +319,59 @@ function actualizarCantidad(itemId, nuevaCantidad) {
     .catch(error => {
         console.error('Error:', error);
         mostrarMensaje('Error al actualizar cantidad', 'error');
+    })
+    .finally(() => {
+        // Rehabilitar botones
+        if (btnMenos) btnMenos.disabled = false;
+        if (btnMas) btnMas.disabled = false;
     });
 }
 
-// Eliminar del carrito
-function eliminarDelCarrito(itemId) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-        return;
-    }
+// Actualizar botones de control después de cambiar cantidad
+function actualizarBotonesControles(itemId, nuevaCantidad) {
+    const container = document.getElementById(`item-${itemId}`);
+    const btnMenos = container.querySelector('button[onclick*="actualizarCantidad"]');
+    const btnMas = container.querySelectorAll('button[onclick*="actualizarCantidad"]')[1];
     
-    fetch(`/finanzas/carrito/eliminar/${itemId}/`, {
+    // Actualizar onclick del botón menos
+    btnMenos.setAttribute('onclick', `actualizarCantidad(${itemId}, ${nuevaCantidad - 1})`);
+    
+    // Actualizar onclick del botón más
+    btnMas.setAttribute('onclick', `actualizarCantidad(${itemId}, ${nuevaCantidad + 1})`);
+    
+    // Actualizar estado del botón menos
+    if (nuevaCantidad <= 1) {
+        btnMenos.disabled = true;
+        btnMenos.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        btnMenos.disabled = false;
+        btnMenos.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+// Mostrar modal para eliminar item
+function mostrarModalEliminar(itemId, nombreProducto) {
+    itemIdParaEliminar = itemId;
+    document.getElementById('nombreProductoEliminar').textContent = nombreProducto;
+    document.getElementById('modalEliminarItem').classList.remove('hidden');
+}
+
+// Cerrar modal eliminar
+function cerrarModalEliminar() {
+    itemIdParaEliminar = null;
+    document.getElementById('modalEliminarItem').classList.add('hidden');
+}
+
+// Confirmar eliminación
+function confirmarEliminar() {
+    if (!itemIdParaEliminar) return;
+    
+    const btn = document.getElementById('btnConfirmarEliminar');
+    const originalText = btn.textContent;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Eliminando...';
+    btn.disabled = true;
+    
+    fetch(`/cart/carrito/eliminar/${itemIdParaEliminar}/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
@@ -249,20 +380,35 @@ function eliminarDelCarrito(itemId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remover el elemento del DOM
-            document.querySelector(`[data-item-id="${itemId}"]`).remove();
+            // Remover el elemento del DOM con animación
+            const item = document.getElementById(`item-${itemIdParaEliminar}`);
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-100%)';
+            
+            setTimeout(() => {
+                item.remove();
+            }, 300);
             
             // Actualizar totales
             document.getElementById('total-items').textContent = data.total_items;
             document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
             document.getElementById('total').textContent = `$${data.total_carrito}`;
             
+            // Actualizar badge del navbar
+            actualizarBadgeCarrito();
+            
             // Si no quedan items, recargar la página
             if (data.total_items === 0) {
-                location.reload();
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
             }
             
+            // Cerrar modal
+            cerrarModalEliminar();
             mostrarMensaje(data.message, 'success');
+            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -270,16 +416,31 @@ function eliminarDelCarrito(itemId) {
     .catch(error => {
         console.error('Error:', error);
         mostrarMensaje('Error al eliminar producto', 'error');
+    })
+    .finally(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
     });
 }
 
-// Limpiar carrito
-function limpiarCarrito() {
-    if (!confirm('¿Estás seguro de que quieres vaciar completamente el carrito?')) {
-        return;
-    }
+// Mostrar modal para vaciar carrito
+function mostrarModalVaciarCarrito() {
+    document.getElementById('modalVaciarCarrito').classList.remove('hidden');
+}
+
+// Cerrar modal vaciar carrito
+function cerrarModalVaciarCarrito() {
+    document.getElementById('modalVaciarCarrito').classList.add('hidden');
+}
+
+// Confirmar vaciar carrito
+function confirmarVaciarCarrito() {
+    const btn = document.getElementById('btnConfirmarVaciar');
+    const originalText = btn.textContent;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Vaciando...';
+    btn.disabled = true;
     
-    fetch('/finanzas/carrito/limpiar/', {
+    fetch('/cart/carrito/limpiar/', {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
@@ -289,7 +450,14 @@ function limpiarCarrito() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Cerrar modal y recargar
+            cerrarModalVaciarCarrito();
+            mostrarMensaje(data.message, 'success');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -297,25 +465,178 @@ function limpiarCarrito() {
     .catch(error => {
         console.error('Error:', error);
         mostrarMensaje('Error al vaciar carrito', 'error');
+    })
+    .finally(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
     });
+}
+
+// Actualizar badge del carrito
+function actualizarBadgeCarrito() {
+    fetch('/cart/api/carrito-widget/')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('carrito-badge');
+            const mobileBadge = document.getElementById('mobile-carrito-badge');
+            
+            if (data.total_items > 0) {
+                if (badge) {
+                    badge.textContent = data.total_items;
+                    badge.classList.remove('hidden');
+                }
+                if (mobileBadge) {
+                    mobileBadge.textContent = data.total_items;
+                    mobileBadge.classList.remove('hidden');
+                }
+            } else {
+                if (badge) badge.classList.add('hidden');
+                if (mobileBadge) mobileBadge.classList.add('hidden');
+            }
+        })
+        .catch(error => {
+            console.log('Error actualizando badge del carrito:', error);
+        });
 }
 
 // Mostrar mensajes
 function mostrarMensaje(mensaje, tipo) {
-    // Crear elemento de mensaje
     const messageDiv = document.createElement('div');
     messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 ${
         tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white font-semibold`;
+    } text-white font-semibold transform transition-all duration-300`;
     messageDiv.textContent = mensaje;
     
+    // Añadir al DOM con animación
+    messageDiv.style.transform = 'translateX(100%)';
     document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(0)';
+    }, 100);
     
     // Remover después de 3 segundos
     setTimeout(() => {
-        messageDiv.remove();
+        messageDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 300);
     }, 3000);
 }
+
+// Cerrar modales con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalEliminar();
+        cerrarModalVaciarCarrito();
+    }
+});
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Carrito cargado correctamente');
+    
+    // Inicializar PayPal solo si hay items en el carrito
+    {% if items %}
+        inicializarPayPal();
+    {% endif %}
+});
+
+// ============== INTEGRACIÓN PAYPAL ============== //
+
+function inicializarPayPal() {
+    // Verificar que PayPal esté disponible
+    if (typeof paypal === 'undefined') {
+        console.error('PayPal SDK no cargado');
+        mostrarFallback();
+        return;
+    }
+    
+    paypal.Buttons({
+        style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'paypal',
+            height: 50
+        },
+        
+        createOrder: function(data, actions) {
+            // Ocultar loading
+            document.getElementById('paypal-loading').style.display = 'none';
+            
+            // Llamar a nuestro backend para crear la orden
+            return fetch('/cart/paypal/crear-orden/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    return data.order_id;
+                } else {
+                    throw new Error(data.message || 'Error creando orden');
+                }
+            })
+            .catch(error => {
+                console.error('Error creando orden:', error);
+                mostrarMensaje('Error al procesar el pago: ' + error.message, 'error');
+                throw error;
+            });
+        },
+        
+        onApprove: function(data, actions) {
+            // Mostrar mensaje de procesamiento
+            mostrarMensaje('Procesando pago...', 'success');
+            
+            // PayPal manejará la captura automáticamente
+            // El webhook se encargará del resto
+            return actions.order.capture().then(function(details) {
+                // Pago exitoso - redirigir a página de confirmación
+                mostrarMensaje('¡Pago completado exitosamente!', 'success');
+                
+                // Esperar un momento y redirigir
+                setTimeout(() => {
+                    window.location.href = `/cart/pago-exitoso/${data.orderID}/`;
+                }, 2000);
+            });
+        },
+        
+        onError: function(err) {
+            console.error('Error de PayPal:', err);
+            mostrarMensaje('Error en el proceso de pago. Intenta nuevamente.', 'error');
+        },
+        
+        onCancel: function(data) {
+            mostrarMensaje('Pago cancelado', 'error');
+        }
+        
+    }).render('#paypal-button-container').then(() => {
+        // PayPal cargado exitosamente
+        document.getElementById('paypal-loading').style.display = 'none';
+        console.log('PayPal inicializado correctamente');
+    }).catch((error) => {
+        console.error('Error inicializando PayPal:', error);
+        mostrarFallback();
+    });
+}
+
+function mostrarFallback() {
+    document.getElementById('paypal-loading').style.display = 'none';
+    document.getElementById('paypal-fallback').classList.remove('hidden');
+}
+
+function procesarPagoManual() {
+    // Función de respaldo si PayPal falla
+    window.location.href = '{% url "finanzas:checkout" %}';
+}
+
+// ============== FUNCIONES EXISTENTES DEL CARRITO ============== //
 </script>
 {% endblock %}
 {% endblock %}
