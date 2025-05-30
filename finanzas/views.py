@@ -1,11 +1,11 @@
-# 3. finanzas/views.py
+# finanzas/views.py - VISTA COMPLETA CORREGIDA
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import F, Sum, Count, Q, Avg
+from django.db.models import F, Sum, Count, Q, Avg, DecimalField
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -21,9 +21,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
 from datetime import datetime, timedelta
 import calendar
-
-
-
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -507,15 +504,12 @@ def pago_cancelado(request, codigo_orden):
 
 
 
-# ============== DASHBOARD DE FINANZAS ============== #
-# AÑADIR al final del archivo finanzas/views.py existente
-
-
+# ============== DASHBOARD DE FINANZAS - CORREGIDO ============== #
 
 @staff_member_required
 def dashboard_finanzas(request):
     """
-    Dashboard principal de finanzas - Solo para staff
+    Dashboard principal de finanzas - CORREGIDO COMPLETAMENTE
     """
     # Obtener fechas para filtros
     hoy = timezone.now().date()
@@ -611,7 +605,7 @@ def dashboard_finanzas(request):
     
     ventas_12_meses.reverse()
     
-    # ============== TOP PRODUCTOS ============== #
+    # ============== TOP PRODUCTOS - CORREGIDO ============== #
     
     top_productos = ItemOrden.objects.filter(
         orden__estado='pagada',
@@ -622,19 +616,19 @@ def dashboard_finanzas(request):
         'producto__id'
     ).annotate(
         cantidad_vendida=Sum('cantidad'),
-        ingresos_generados=Sum('subtotal'),
+        # CALCULAR subtotal usando F() y operaciones matemáticas
+        ingresos_generados=Sum(F('cantidad') * F('precio_unitario')),
         ordenes_count=Count('orden', distinct=True)
     ).order_by('-cantidad_vendida')[:10]
     
-    # ============== USUARIOS TOP ============== #
+    # ============== USUARIOS TOP - CORREGIDO ============== #
     
     top_usuarios = OrdenCompra.objects.filter(
         estado='pagada',
         fecha_pago__date__gte=hace_30_dias
     ).values(
-        'usuario__username',
-        'usuario__nombre',
-        'usuario__email'
+        'usuario__email',
+        'usuario__nombre'
     ).annotate(
         total_gastado=Sum('total'),
         ordenes_count=Count('id'),
@@ -656,17 +650,32 @@ def dashboard_finanzas(request):
     
     tasa_conversion = (compras_completadas / carritos_activos * 100) if carritos_activos > 0 else 0
     
-    # ============== MÉTODOS DE PAGO ============== #
+    # ============== MÉTODOS DE PAGO - CORREGIDO ============== #
     
     metodos_pago = OrdenCompra.objects.filter(
         estado='pagada',
         fecha_pago__date__gte=hace_30_dias
-    ).extra(
-        select={'metodo': 'CASE WHEN paypal_payment_id IS NOT NULL THEN "PayPal" ELSE "Otro" END'}
-    ).values('metodo').annotate(
-        count=Count('id'),
-        ingresos=Sum('total')
-    ).order_by('-count')
+    ).aggregate(
+        paypal_count=Count('id', filter=Q(paypal_payment_id__isnull=False)),
+        paypal_ingresos=Sum('total', filter=Q(paypal_payment_id__isnull=False)),
+        otro_count=Count('id', filter=Q(paypal_payment_id__isnull=True)),
+        otro_ingresos=Sum('total', filter=Q(paypal_payment_id__isnull=True))
+    )
+    
+    # Formatear métodos de pago para el template
+    metodos_pago_formateados = []
+    if metodos_pago['paypal_count']:
+        metodos_pago_formateados.append({
+            'metodo': 'PayPal',
+            'count': metodos_pago['paypal_count'],
+            'ingresos': metodos_pago['paypal_ingresos'] or Decimal('0')
+        })
+    if metodos_pago['otro_count']:
+        metodos_pago_formateados.append({
+            'metodo': 'Otro',
+            'count': metodos_pago['otro_count'],
+            'ingresos': metodos_pago['otro_ingresos'] or Decimal('0')
+        })
     
     # ============== CONTEXTO ============== #
     
@@ -698,14 +707,14 @@ def dashboard_finanzas(request):
         # Top lists
         'top_productos': top_productos,
         'top_usuarios': top_usuarios,
-        'metodos_pago': metodos_pago,
+        'metodos_pago': metodos_pago_formateados,
         
         # Contadores adicionales
         'carritos_activos': carritos_activos,
         'compras_completadas': compras_completadas,
         
         # Fechas para referencia
-        'fecha_actual': hoy,
+        'fecha_actual': timezone.now(),  # datetime completo en lugar de .date()
         'periodo_analisis': '30 días',
     }
     
@@ -765,6 +774,7 @@ def reportes_detallados(request):
     
     # Listas para filtros
     productos_disponibles = TarotProduct.objects.select_related('mazo').all()
+    from user.models import CustomUser
     usuarios_con_compras = CustomUser.objects.filter(ordenes_compra__isnull=False).distinct()
     
     context = {
@@ -826,7 +836,7 @@ def exportar_ventas_csv(request):
             writer.writerow([
                 orden.fecha_pago.strftime('%d/%m/%Y') if orden.fecha_pago else '',
                 orden.codigo_orden,
-                orden.usuario.username,
+                orden.usuario.nombre,
                 orden.usuario.email,
                 item.producto.mazo.nombre,
                 item.cantidad,
