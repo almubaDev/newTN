@@ -40,7 +40,9 @@ class TarotProduct(models.Model):
     link_compra = models.URLField(
         verbose_name="Link de Compra",
         help_text="URL donde se procesa el pago del producto",
-        max_length=500
+        max_length=500,
+        null=True,
+        blank=True
     )
     descripcion_adicional = models.TextField(
         blank=True,

@@ -8,6 +8,7 @@ urlpatterns = [
     path('', include('oraculo.urls')),
     path('user/', include('user.urls')),
     path('tienda/', include('tienda.urls')),
+     path('cart/', include('finanzas.urls')),
 ]
 
 if settings.DEBUG:

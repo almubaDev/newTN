@@ -1,0 +1,321 @@
+<!-- finanzas/templates/finanzas/carrito.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'tienda:home' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <div class="flex-1">
+                    <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                        Mi Carrito de Compras
+                    </h1>
+                    <p class="text-cosmic-400">
+                        Revisa tus productos antes de proceder al pago
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {% if items %}
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Lista de Productos -->
+                <div class="lg:col-span-2">
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl border border-primary-500/20">
+                        <!-- Header de la tabla -->
+                        <div class="p-6 border-b border-cosmic-600">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-xl font-mystical font-semibold text-primary-300">
+                                    Productos en tu Carrito
+                                </h2>
+                                <button onclick="limpiarCarrito()" 
+                                        class="text-red-400 hover:text-red-300 transition-colors text-sm">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Vaciar Carrito
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Items del carrito -->
+                        <div class="divide-y divide-cosmic-600">
+                            {% for item in items %}
+                                <div class="p-6 item-carrito" data-item-id="{{ item.id }}">
+                                    <div class="flex items-center space-x-4">
+                                        <!-- Imagen del producto -->
+                                        <div class="flex-shrink-0">
+                                            {% if item.producto.mazo.imagen_reverso %}
+                                                <img src="{{ item.producto.mazo.imagen_reverso.url }}" 
+                                                     alt="{{ item.producto.mazo.nombre }}"
+                                                     class="w-20 h-20 object-cover rounded-lg border border-gold-500/30">
+                                            {% else %}
+                                                <div class="w-20 h-20 bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-lg border border-gold-500/30 flex items-center justify-center">
+                                                    <i class="fas fa-cards-blank text-2xl text-cosmic-400"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Información del producto -->
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-lg font-semibold text-primary-300 mb-1">
+                                                {{ item.producto.mazo.nombre }}
+                                            </h3>
+                                            <p class="text-sm text-mystic-400 mb-2">
+                                                {{ item.producto.mazo.set.nombre }}
+                                            </p>
+                                            <div class="flex items-center space-x-4">
+                                                <span class="text-sm text-cosmic-400">
+                                                    <i class="fas fa-layer-group mr-1"></i>
+                                                    {{ item.producto.get_total_cartas }} cartas
+                                                </span>
+                                                <span class="text-lg font-bold text-gold-400">
+                                                    ${{ item.precio_unitario }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Controles de cantidad -->
+                                        <div class="flex items-center space-x-3">
+                                            <button onclick="actualizarCantidad({{ item.id }}, {{ item.cantidad|add:'-1' }})"
+                                                    class="w-8 h-8 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 rounded-full flex items-center justify-center transition-colors"
+                                                    {% if item.cantidad <= 1 %}disabled{% endif %}>
+                                                <i class="fas fa-minus text-xs"></i>
+                                            </button>
+                                            
+                                            <span class="text-lg font-semibold text-cosmic-200 w-8 text-center cantidad-{{ item.id }}">
+                                                {{ item.cantidad }}
+                                            </span>
+                                            
+                                            <button onclick="actualizarCantidad({{ item.id }}, {{ item.cantidad|add:'1' }})"
+                                                    class="w-8 h-8 bg-cosmic-600 hover:bg-cosmic-500 text-cosmic-200 rounded-full flex items-center justify-center transition-colors">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Subtotal -->
+                                        <div class="text-right">
+                                            <div class="text-xl font-bold text-green-400 subtotal-{{ item.id }}">
+                                                ${{ item.subtotal }}
+                                            </div>
+                                            <button onclick="eliminarDelCarrito({{ item.id }})"
+                                                    class="text-red-400 hover:text-red-300 transition-colors text-sm mt-1">
+                                                <i class="fas fa-trash mr-1"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="lg:col-span-1">
+                    <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20 sticky top-8">
+                        <h3 class="text-xl font-mystical font-semibold text-primary-300 mb-6">
+                            Resumen del Pedido
+                        </h3>
+
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between text-cosmic-300">
+                                <span>Productos (<span id="total-items">{{ carrito.total_items }}</span>)</span>
+                                <span id="subtotal">${{ carrito.subtotal }}</span>
+                            </div>
+                            
+                            <div class="border-t border-cosmic-600 pt-4">
+                                <div class="flex justify-between text-lg font-bold text-gold-400">
+                                    <span>Total</span>
+                                    <span id="total">${{ carrito.total }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <a href="{% url 'finanzas:checkout' %}" 
+                               class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-3 px-6 rounded-lg font-bold text-center transition-all duration-300 transform hover:scale-105 inline-block">
+                                <i class="fas fa-credit-card mr-2"></i>
+                                Proceder al Pago
+                            </a>
+                            
+                            <a href="{% url 'tienda:home' %}" 
+                               class="w-full border-2 border-primary-500 text-primary-400 hover:bg-primary-500 hover:text-white py-3 px-6 rounded-lg font-semibold text-center transition-all duration-300 inline-block">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                Seguir Comprando
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Carrito vacío -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-cosmic-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shopping-cart text-3xl text-cosmic-400"></i>
+                </div>
+                <h3 class="text-2xl font-mystical font-semibold text-cosmic-300 mb-4">
+                    Tu carrito está vacío
+                </h3>
+                <p class="text-cosmic-400 mb-8 max-w-md mx-auto">
+                    Explora nuestra tienda y encuentra los mejores mazos de tarot
+                </p>
+                <a href="{% url 'tienda:home' %}" 
+                   class="bg-gradient-to-r from-primary-500 to-mystic-500 hover:from-primary-600 hover:to-mystic-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 inline-flex items-center">
+                    <i class="fas fa-store mr-2"></i>
+                    Explorar Tienda
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Actualizar cantidad
+function actualizarCantidad(itemId, nuevaCantidad) {
+    if (nuevaCantidad < 1) return;
+    
+    fetch(`/finanzas/carrito/actualizar/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            cantidad: nuevaCantidad
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar cantidad
+            document.querySelector(`.cantidad-${itemId}`).textContent = nuevaCantidad;
+            
+            // Actualizar subtotal del item
+            document.querySelector(`.subtotal-${itemId}`).textContent = `$${data.subtotal_item}`;
+            
+            // Actualizar totales
+            document.getElementById('total-items').textContent = data.total_items;
+            document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
+            document.getElementById('total').textContent = `$${data.total_carrito}`;
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje(data.message, 'success');
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al actualizar cantidad', 'error');
+    });
+}
+
+// Eliminar del carrito
+function eliminarDelCarrito(itemId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+        return;
+    }
+    
+    fetch(`/finanzas/carrito/eliminar/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remover el elemento del DOM
+            document.querySelector(`[data-item-id="${itemId}"]`).remove();
+            
+            // Actualizar totales
+            document.getElementById('total-items').textContent = data.total_items;
+            document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
+            document.getElementById('total').textContent = `$${data.total_carrito}`;
+            
+            // Si no quedan items, recargar la página
+            if (data.total_items === 0) {
+                location.reload();
+            }
+            
+            mostrarMensaje(data.message, 'success');
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al eliminar producto', 'error');
+    });
+}
+
+// Limpiar carrito
+function limpiarCarrito() {
+    if (!confirm('¿Estás seguro de que quieres vaciar completamente el carrito?')) {
+        return;
+    }
+    
+    fetch('/finanzas/carrito/limpiar/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al vaciar carrito', 'error');
+    });
+}
+
+// Mostrar mensajes
+function mostrarMensaje(mensaje, tipo) {
+    // Crear elemento de mensaje
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 ${
+        tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white font-semibold`;
+    messageDiv.textContent = mensaje;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}
+{% endblock %}

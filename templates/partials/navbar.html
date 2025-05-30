@@ -89,6 +89,16 @@
             <!-- User Menu -->
             <div class="hidden md:flex items-center space-x-4">
                 {% if user.is_authenticated %}
+                    <!-- CARRITO DE COMPRAS - AGREGADO AQUÍ -->
+                    <a href="{% url 'finanzas:ver_carrito' %}" 
+                       class="relative text-cosmic-300 hover:text-primary-400 transition-colors p-2">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span id="carrito-badge" 
+                              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hidden">
+                            0
+                        </span>
+                    </a>
+
                     <!-- User Info -->
                     <div class="flex items-center space-x-3">
                         <div class="text-right">
@@ -145,7 +155,19 @@
             </div>
             
             <!-- Mobile Menu Button -->
-            <div class="md:hidden">
+            <div class="md:hidden flex items-center space-x-3">
+                <!-- CARRITO EN MÓVIL - SIEMPRE VISIBLE -->
+                {% if user.is_authenticated %}
+                    <a href="{% url 'finanzas:ver_carrito' %}" 
+                       class="relative text-cosmic-300 hover:text-primary-400 transition-colors p-2">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span id="mobile-carrito-badge" 
+                              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hidden">
+                            0
+                        </span>
+                    </a>
+                {% endif %}
+                
                 <button id="mobile-menu-btn" 
                         class="text-cosmic-300 hover:text-primary-400 focus:outline-none focus:text-primary-400 transition-colors">
                     <i class="fas fa-bars text-xl"></i>
@@ -210,6 +232,11 @@
                 <div class="px-3 py-2 text-cosmic-400 text-sm">
                     {{ user.nombre }} - {{ user.creditos_disponibles }} créditos
                 </div>
+                
+                <a href="{% url 'tienda:mis_compras' %}" 
+                   class="block px-3 py-2 text-cosmic-300 hover:text-gold-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
+                    <i class="fas fa-shopping-bag mr-3"></i>Mis Compras
+                </a>
                 <a href="{% url 'user:profile' %}" 
                    class="block px-3 py-2 text-cosmic-300 hover:text-primary-400 hover:bg-cosmic-700/50 rounded-md transition-all duration-200">
                     <i class="fas fa-user mr-3"></i>Mi Perfil
@@ -291,6 +318,35 @@
                 menuIcon.classList.add('fa-bars');
             }
         });
+
+        // ACTUALIZAR BADGE DEL CARRITO
+        {% if user.is_authenticated %}
+        function actualizarBadgeCarrito() {
+            fetch('/finanzas/api/carrito-widget/')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('carrito-badge');
+                    const mobileBadge = document.getElementById('mobile-carrito-badge');
+                    
+                    if (data.total_items > 0) {
+                        badge.textContent = data.total_items;
+                        badge.classList.remove('hidden');
+                        
+                        mobileBadge.textContent = data.total_items;
+                        mobileBadge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                        mobileBadge.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.log('Carrito no disponible');
+                });
+        }
+
+        // Actualizar carrito al cargar
+        actualizarBadgeCarrito();
+        {% endif %}
     });
     
     // User dropdown toggle (simple)

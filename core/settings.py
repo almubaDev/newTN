@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'oraculo',
     'user',
     'tienda',
+    'finanzas',
 ]
 
 MIDDLEWARE = [
