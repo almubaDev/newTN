@@ -19,18 +19,18 @@
         <div class="grid lg:grid-cols-2 gap-12 mb-12">
             <!-- Imagen Principal -->
             <div class="space-y-4">
+                
                 <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-4 border border-primary-500/20">
                     {% if producto.mazo.imagen_reverso %}
                         <img src="{{ producto.mazo.imagen_reverso.url }}" 
                              alt="{{ producto.mazo.nombre }}"
-                             class="w-full object-contain rounded-xl border-2 border-gold-500/30">
+                             class="w-full max-h-64 object-contain rounded-xl">
                     {% else %}
-                        <div class="w-full aspect-[3/4] bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2 border-gold-500/30 flex items-center justify-center">
+                        <div class="w-full h-64 bg-gradient-to-br from-cosmic-700 to-cosmic-800 rounded-xl border-2  flex items-center justify-center">
                             <i class="fas fa-cards-blank text-6xl text-cosmic-400"></i>
                         </div>
                     {% endif %}
                 </div>
-
                 <!-- Galería de Cartas -->
                 {% if cartas_galeria %}
                     <div>

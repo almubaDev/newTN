@@ -25,6 +25,10 @@ urlpatterns = [
     path('dashmid/mazos/<int:pk>/editar/', views.mazo_update, name='mazo_update'),
     path('dashmid/mazos/<int:pk>/eliminar/', views.mazo_delete, name='mazo_delete'),
     
+    path('dashmid/mazos/<int:mazo_pk>/complementos/', views.complementos_mazo_manage, name='complementos_mazo_manage'),
+    path('dashmid/mazos/<int:mazo_pk>/complementos/descargar/<str:tipo>/', views.complementos_download, name='complementos_download'),
+    path('dashmid/mazos/<int:mazo_pk>/complementos/eliminar/<str:tipo>/', views.complementos_delete_file, name='complementos_delete_file'),
+    
     # ============== CARTA URLs ============== #
     # URLs públicas
     path('cartas/', views.carta_list, name='carta_list'),
@@ -37,4 +41,5 @@ urlpatterns = [
     
     # ============== AJAX URLs ============== #
     path('ajax/mazos-por-set/', views.get_mazos_by_set, name='get_mazos_by_set'),
+    path('mazo/<int:mazo_id>/plantilla-pdf/', views.generar_plantilla_pdf, name='plantilla_pdf'),
 ]

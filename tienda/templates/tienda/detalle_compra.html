@@ -37,68 +37,55 @@
                                     {{ compra.producto.mazo.codigo }}
                                 </span>
                             </div>
+
+                            <!-- Botones de descarga -->
+                            <div class="flex gap-3 mt-4">
+                                {% if compra.producto.mazo.complementos.instructivo %}
+                                    <a href="{{ compra.producto.mazo.complementos.instructivo.url }}" 
+                                       target="_blank"
+                                       class="bg-gradient-to-r from-blue-500 to-primary-500 hover:from-blue-600 hover:to-primary-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm inline-flex items-center">
+                                        <i class="fas fa-book mr-2"></i>
+                                        Descargar Instructivo
+                                    </a>
+                                {% endif %}
+                                
+                                {% if compra.producto.mazo.complementos.plantilla_impresion %}
+                                    <a href="{{ compra.producto.mazo.complementos.plantilla_impresion.url }}" 
+                                       target="_blank"
+                                       class="bg-gradient-to-r from-purple-500 to-mystic-500 hover:from-purple-600 hover:to-mystic-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm inline-flex items-center">
+                                        <i class="fas fa-print mr-2"></i>
+                                        Descargar Plantilla
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <!-- Estado de la compra -->
-                        <div class="text-right">
-                            {% if compra.estado == 'completada' %}
-                                <div class="bg-green-500/20 text-green-300 px-4 py-2 rounded-lg border border-green-500/30">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    <span class="font-semibold">Completada</span>
-                                </div>
-                            {% elif compra.estado == 'pendiente' %}
-                                <div class="bg-gold-500/20 text-gold-300 px-4 py-2 rounded-lg border border-gold-500/30">
-                                    <i class="fas fa-clock mr-2"></i>
-                                    <span class="font-semibold">Pendiente</span>
-                                </div>
-                            {% elif compra.estado == 'cancelada' %}
-                                <div class="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg border border-red-500/30">
-                                    <i class="fas fa-times-circle mr-2"></i>
-                                    <span class="font-semibold">Cancelada</span>
-                                </div>
-                            {% elif compra.estado == 'reembolsada' %}
-                                <div class="bg-mystic-500/20 text-mystic-300 px-4 py-2 rounded-lg border border-mystic-500/30">
-                                    <i class="fas fa-undo mr-2"></i>
-                                    <span class="font-semibold">Reembolsada</span>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Detalles del pago -->
-                    <div class="grid md:grid-cols-3 gap-4 p-4 bg-cosmic-800/30 rounded-lg">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-gold-400 mb-1">${{ compra.precio_pagado }}</div>
-                            <div class="text-sm text-cosmic-400">Precio Pagado</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-lg font-semibold text-mystic-300 mb-1">{{ compra.get_metodo_pago_display }}</div>
-                            <div class="text-sm text-cosmic-400">Método de Pago</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-lg font-semibold text-primary-300 mb-1">
-                                {% if compra.referencia_pago %}
-                                    {{ compra.referencia_pago|truncatechars:15 }}
-                                {% else %}
-                                    N/A
+                            {% comment %} <div class="text-right">
+                                {% if compra.estado == 'completada' %}
+                                    <div class="bg-green-500/20 text-green-300 px-4 py-2 rounded-lg border border-green-500/30">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        <span class="font-semibold">Completada</span>
+                                    </div>
+                                {% elif compra.estado == 'pendiente' %}
+                                    <div class="bg-gold-500/20 text-gold-300 px-4 py-2 rounded-lg border border-gold-500/30">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        <span class="font-semibold">Pendiente</span>
+                                    </div>
+                                {% elif compra.estado == 'cancelada' %}
+                                    <div class="bg-red-500/20 text-red-300 px-4 py-2 rounded-lg border border-red-500/30">
+                                        <i class="fas fa-times-circle mr-2"></i>
+                                        <span class="font-semibold">Cancelada</span>
+                                    </div>
+                                {% elif compra.estado == 'reembolsada' %}
+                                    <div class="bg-mystic-500/20 text-mystic-300 px-4 py-2 rounded-lg border border-mystic-500/30">
+                                        <i class="fas fa-undo mr-2"></i>
+                                        <span class="font-semibold">Reembolsada</span>
+                                    </div>
                                 {% endif %}
-                            </div>
-                            <div class="text-sm text-cosmic-400">Referencia</div>
+                            </div> {% endcomment %}
                         </div>
-                    </div>
-                </div>
 
-                <!-- Descripción del Mazo -->
-                <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-8 border border-mystic-500/20">
-                    <h3 class="text-xl font-mystical font-semibold text-mystic-300 mb-4">
-                        <i class="fas fa-align-left mr-2"></i>
-                        Descripción del Mazo
-                    </h3>
-                    <div class="prose prose-invert max-w-none">
-                        <p class="text-cosmic-200 leading-relaxed whitespace-pre-line">
-                            {{ compra.producto.mazo.descripcion }}
-                        </p>
-                    </div>
                 </div>
 
                 <!-- Cartas del Producto (solo si está completada) -->
@@ -207,6 +194,19 @@
                             </div>
                         {% endif %}
                     </div>
+
+                    <!-- Descripción del Mazo -->
+                    <div>
+                        <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                            <i class="fas fa-align-left mr-2"></i>
+                            Descripción
+                        </h3>
+                        <div class="prose prose-invert max-w-none">
+                            <p class="text-cosmic-200 leading-relaxed whitespace-pre-line text-sm">
+                                {{ compra.producto.mazo.descripcion }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -236,6 +236,9 @@
         document.getElementById('fullCardModalImage').src = imageUrl;
         document.getElementById('fullCardModalTitle').textContent = `#${cardNumber} - ${cardName}`;
         document.getElementById('fullCardModal').classList.remove('hidden');
+        
+        // Aplicar protección a la nueva imagen del modal
+        bloquearImagenModal();
     }
 
     function closeFullCardModal() {
@@ -247,6 +250,76 @@
         if (e.key === 'Escape') {
             closeFullCardModal();
         }
+    });
+
+    // PROTECCIÓN DE IMÁGENES
+    function bloquearClicDerecho() {
+        const imagenes = document.querySelectorAll('img');
+        
+        imagenes.forEach(img => {
+            img.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            img.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            img.style.userSelect = 'none';
+            img.style.webkitUserSelect = 'none';
+            img.style.mozUserSelect = 'none';
+            img.style.msUserSelect = 'none';
+            img.style.webkitTouchCallout = 'none';
+        });
+    }
+
+    function bloquearImagenModal() {
+        const imgModal = document.getElementById('fullCardModalImage');
+        if (imgModal) {
+            imgModal.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            imgModal.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            imgModal.style.userSelect = 'none';
+            imgModal.style.webkitUserSelect = 'none';
+            imgModal.style.mozUserSelect = 'none';
+            imgModal.style.msUserSelect = 'none';
+            imgModal.style.webkitTouchCallout = 'none';
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u')) ||
+            (e.ctrlKey && (e.key === 'S' || e.key === 's'))) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    document.addEventListener('selectstart', function(e) {
+        if (e.target.closest('.grid') || e.target.tagName === 'IMG') {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        bloquearClicDerecho();
     });
 </script>
 {% endblock %}

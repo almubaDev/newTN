@@ -127,6 +127,116 @@ class Mazo(models.Model):
         super().save(*args, **kwargs)
 
 
+def upload_to_complementos_instructivos(instance, filename):
+    """Función personalizada para instructivos de mazos"""
+    return f'complementos/instructivos/{filename}'
+
+def upload_to_complementos_plantillas(instance, filename):
+    """Función personalizada para plantillas de impresión de mazos"""
+    return f'complementos/plantillas/{filename}'
+
+
+class ComplementosMazo(models.Model):
+    """
+    Modelo para archivos complementarios de un mazo (instructivos y plantillas)
+    """
+    mazo = models.OneToOneField(
+        Mazo,
+        on_delete=models.CASCADE,
+        related_name='complementos',
+        verbose_name="Mazo"
+    )
+    
+    instructivo = models.FileField(
+        upload_to=upload_to_complementos_instructivos,
+        blank=True,
+        null=True,
+        verbose_name="Instructivo",
+        help_text="Archivo con las instrucciones de uso del mazo (PDF, DOC, etc.)"
+    )
+    
+    plantilla_impresion = models.FileField(
+        upload_to=upload_to_complementos_plantillas,
+        blank=True,
+        null=True,
+        verbose_name="Plantilla de Impresión",
+        help_text="Archivo con plantilla para imprimir el mazo (PDF, AI, PSD, etc.)"
+    )
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Complementos de Mazo"
+        verbose_name_plural = "Complementos de Mazos"
+    
+    def __str__(self):
+        return f"Complementos de {self.mazo.nombre}"
+    
+    def tiene_instructivo(self):
+        """Verifica si tiene instructivo"""
+        return bool(self.instructivo and self.instructivo.name)
+    
+    def tiene_plantilla(self):
+        """Verifica si tiene plantilla de impresión"""
+        return bool(self.plantilla_impresion and self.plantilla_impresion.name)
+    
+    def get_instructivo_extension(self):
+        """Retorna la extensión del archivo instructivo"""
+        if self.tiene_instructivo():
+            return self.instructivo.name.split('.')[-1].upper() if '.' in self.instructivo.name else 'ARCHIVO'
+        return None
+    
+    def get_plantilla_extension(self):
+        """Retorna la extensión del archivo de plantilla"""
+        if self.tiene_plantilla():
+            return self.plantilla_impresion.name.split('.')[-1].upper() if '.' in self.plantilla_impresion.name else 'ARCHIVO'
+        return None
+    
+    def get_instructivo_size(self):
+        """Retorna el tamaño del instructivo en formato legible"""
+        if self.tiene_instructivo():
+            try:
+                size = self.instructivo.size
+                if size < 1024:
+                    return f"{size} B"
+                elif size < 1024 * 1024:
+                    return f"{size / 1024:.1f} KB"
+                else:
+                    return f"{size / (1024 * 1024):.1f} MB"
+            except:
+                return "Tamaño desconocido"
+        return None
+    
+    def get_plantilla_size(self):
+        """Retorna el tamaño de la plantilla en formato legible"""
+        if self.tiene_plantilla():
+            try:
+                size = self.plantilla_impresion.size
+                if size < 1024:
+                    return f"{size} B"
+                elif size < 1024 * 1024:
+                    return f"{size / 1024:.1f} KB"
+                else:
+                    return f"{size / (1024 * 1024):.1f} MB"
+            except:
+                return "Tamaño desconocido"
+        return None
+    
+    def tiene_complementos(self):
+        """Verifica si tiene algún complemento"""
+        return self.tiene_instructivo() or self.tiene_plantilla()
+    
+    def count_complementos(self):
+        """Cuenta cuántos complementos tiene"""
+        count = 0
+        if self.tiene_instructivo():
+            count += 1
+        if self.tiene_plantilla():
+            count += 1
+        return count
+    
+
 class Carta(models.Model):
     """
     Modelo para cartas individuales

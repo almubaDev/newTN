@@ -22,6 +22,13 @@
                         Mazo del set <a href="{% url 'oraculo:set_detail' mazo.set.pk %}" class="text-mystic-400 hover:text-mystic-300 transition-colors">{{ mazo.set.nombre }}</a>
                     </p>
                 </div>
+         
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="{% url 'oraculo:plantilla_pdf' mazo.id %}" 
+                       style="background: #27ae60; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                        📄 Generar Plantilla PDF
+                    </a>
+                </div>
             </div>
         </div>
 

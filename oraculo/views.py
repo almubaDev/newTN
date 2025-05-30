@@ -7,8 +7,81 @@ from django.urls import reverse
 from django.http import JsonResponse
 from django.db import models
 from user.models import CustomUser
-from .models import Set, Mazo, Carta
-from .forms import SetForm, MazoForm, CartaForm, BuscarCartasForm
+from .models import Set, Mazo, Carta, ComplementosMazo
+from .forms import SetForm, MazoForm, CartaForm, BuscarCartasForm, ComplementosMazoForm
+
+
+from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.template.loader import render_to_string
+from weasyprint import HTML, CSS
+import math
+
+# views.py - Agregar esta función
+
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.template.loader import render_to_string
+from django.conf import settings
+from weasyprint import HTML, CSS
+from django.core.files.base import ContentFile
+import os
+import math
+
+@staff_member_required
+def generar_plantilla_pdf(request, mazo_id):
+    mazo = get_object_or_404(Mazo, id=mazo_id)
+    cartas = mazo.cartas.all().order_by('numero', 'id')
+    
+    # Organizar cartas en grupos de 4
+    grupos_cartas = []
+    for i in range(0, cartas.count(), 4):
+        grupo = list(cartas[i:i+4])
+        while len(grupo) < 4:
+            grupo.append(None)
+        grupos_cartas.append(grupo)
+    
+    # Crear grupos de reversos en orden correcto para voltear papel
+    grupos_reversos = []
+    for grupo in grupos_cartas:
+        # Para cada grupo de anversos, crear grupo de reversos en orden inverso
+        # Anversos: [1, 2, 3, 4] -> Reversos: [2, 1, 4, 3] (para coincidir al voltear)
+        reverso_grupo = [grupo[1], grupo[0], grupo[3], grupo[2]] if len(grupo) >= 4 else grupo
+        grupos_reversos.append(reverso_grupo)
+    
+    # Renderizar HTML
+    html_content = render_to_string('oraculo/plantilla_pdf.html', {
+        'mazo': mazo,
+        'grupos_cartas': grupos_cartas,
+        'grupos_reversos': grupos_reversos,
+    })
+    
+    # Configurar base URL para imágenes
+    base_url = request.build_absolute_uri('/')[:-1]
+    
+    # Generar PDF con base URL
+    html_doc = HTML(string=html_content, base_url=base_url)
+    pdf_buffer = html_doc.write_pdf()
+    
+    # Guardar PDF en ComplementosMazo
+    complemento, created = ComplementosMazo.objects.get_or_create(mazo=mazo)
+    
+    # Crear nombre único para el archivo
+    nombre_archivo = f'plantilla_{mazo.nombre.replace(" ", "_")}.pdf'
+    
+    # Guardar/actualizar el PDF en el campo plantilla_impresion
+    complemento.plantilla_impresion.save(
+        nombre_archivo,
+        ContentFile(pdf_buffer),
+        save=True
+    )
+    
+    # Preparar respuesta para descarga
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+    
+    return response
 
 # ============== HELPER FUNCTIONS ============== #
 
@@ -476,3 +549,120 @@ def get_mazos_by_set(request):
     set_id = request.GET.get('set_id')
     mazos = Mazo.objects.filter(set_id=set_id).values('id', 'nombre')
     return JsonResponse({'mazos': list(mazos)})
+
+
+
+# ============== VISTAS PARA COMPLEMENTOS DE MAZO ============== #
+
+@login_required
+@user_passes_test(is_staff_user)
+def complementos_mazo_manage(request, mazo_pk):
+    """
+    Gestionar complementos de un mazo específico
+    """
+    mazo = get_object_or_404(Mazo, pk=mazo_pk)
+    
+    # Obtener o crear complementos
+    complementos, created = ComplementosMazo.objects.get_or_create(mazo=mazo)
+    
+    if request.method == 'POST':
+        form = ComplementosMazoForm(request.POST, request.FILES, instance=complementos)
+        if form.is_valid():
+            try:
+                complementos = form.save()
+                messages.success(request, f'Complementos del mazo "{mazo.nombre}" actualizados exitosamente.')
+                return redirect('oraculo:mazo_detail', pk=mazo.pk)
+            except Exception as e:
+                print(f"Error al guardar complementos: {e}")
+                messages.error(request, f'Error al actualizar complementos: {str(e)}')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    else:
+        form = ComplementosMazoForm(instance=complementos)
+    
+    context = {
+        'form': form,
+        'mazo': mazo,
+        'complementos': complementos,
+        'title': f'Complementos: {mazo.nombre}',
+        'action': 'Actualizar' if not created else 'Configurar'
+    }
+    return render(request, 'oraculo/complementos_form.html', context)
+
+@login_required
+@user_passes_test(is_staff_user)
+def complementos_download(request, mazo_pk, tipo):
+    """
+    Descargar archivos de complementos
+    """
+    mazo = get_object_or_404(Mazo, pk=mazo_pk)
+    
+    try:
+        complementos = mazo.complementos
+        
+        if tipo == 'instructivo' and complementos.tiene_instructivo():
+            response = HttpResponse(
+                complementos.instructivo.read(),
+                content_type='application/octet-stream'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{complementos.instructivo.name}"'
+            return response
+        
+        elif tipo == 'plantilla' and complementos.tiene_plantilla():
+            response = HttpResponse(
+                complementos.plantilla_impresion.read(),
+                content_type='application/octet-stream'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{complementos.plantilla_impresion.name}"'
+            return response
+        
+        else:
+            messages.error(request, 'Archivo no encontrado o no disponible.')
+            
+    except ComplementosMazo.DoesNotExist:
+        messages.error(request, 'Este mazo no tiene complementos configurados.')
+    except Exception as e:
+        print(f"Error en descarga de complementos: {e}")
+        messages.error(request, 'Error al acceder al archivo.')
+    
+    return redirect('oraculo:mazo_detail', pk=mazo_pk)
+
+@login_required
+@user_passes_test(is_staff_user)
+def complementos_delete_file(request, mazo_pk, tipo):
+    """
+    Eliminar un archivo específico de complementos
+    """
+    mazo = get_object_or_404(Mazo, pk=mazo_pk)
+    
+    try:
+        complementos = mazo.complementos
+        
+        if tipo == 'instructivo' and complementos.tiene_instructivo():
+            # Eliminar archivo físico
+            complementos.instructivo.delete()
+            # Limpiar campo en BD
+            complementos.instructivo = None
+            complementos.save()
+            messages.success(request, 'Instructivo eliminado exitosamente.')
+            
+        elif tipo == 'plantilla' and complementos.tiene_plantilla():
+            # Eliminar archivo físico
+            complementos.plantilla_impresion.delete()
+            # Limpiar campo en BD
+            complementos.plantilla_impresion = None
+            complementos.save()
+            messages.success(request, 'Plantilla eliminada exitosamente.')
+            
+        else:
+            messages.warning(request, 'No hay archivo para eliminar.')
+            
+    except ComplementosMazo.DoesNotExist:
+        messages.error(request, 'Este mazo no tiene complementos configurados.')
+    except Exception as e:
+        print(f"Error al eliminar archivo de complementos: {e}")
+        messages.error(request, f'Error al eliminar archivo: {str(e)}')
+    
+    return redirect('oraculo:complementos_mazo_manage', mazo_pk=mazo_pk)

@@ -1,0 +1,136 @@
+<!-- templates/oraculo/plantilla_pdf.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .hoja {
+            width: 190mm;
+            height: 277mm;
+            page-break-after: always;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 5mm;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .carta {
+            width: 90mm;
+            height: 133mm;
+            border: 1px solid #000;
+            overflow: hidden;
+            background: white;
+            box-sizing: border-box;
+        }
+        .carta-imagen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .carta-info {
+            display: none;
+        }
+        .carta-titulo {
+            font-size: 10pt;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .carta-vacia {
+            background: transparent;
+            border: none;
+        }
+        .reverso-imagen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .hoja-reversos {
+            /* Sin espejo - las posiciones ya están correctas */
+        }
+        .hoja:last-child {
+            page-break-after: avoid;
+        }
+    </style>
+</head>
+<body>
+    <!-- HOJAS DE ANVERSOS -->
+    {% for grupo in grupos_cartas %}
+    <div class="hoja">
+        {% for carta in grupo %}
+            {% if carta %}
+            <div class="carta">
+                {% if carta.imagen %}
+                <img src="{{ carta.imagen.url }}" alt="{{ carta.nombre }}" class="carta-imagen">
+                {% else %}
+                <div class="carta-imagen" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 24pt; font-weight: bold;">
+                    {{ carta.nombre|slice:":2"|upper }}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="carta carta-vacia"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endfor %}
+    
+    <!-- HOJA DE REVERSOS -->
+    <div class="hoja hoja-reversos">
+        <!-- Reverso en posición 2 (arriba derecha) -->
+        <div class="carta">
+            {% if mazo.imagen_reverso %}
+            <img src="{{ mazo.imagen_reverso.url }}" alt="Reverso" class="reverso-imagen">
+            {% else %}
+            <div class="reverso-imagen" style="background: linear-gradient(45deg, #2c3e50 0%, #34495e 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 36pt; flex-direction: column;">
+                <div style="font-size: 12pt; margin-bottom: 10px;">{{ mazo.nombre }}</div>
+                <div>🔮</div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- Reverso en posición 1 (arriba izquierda) -->
+        <div class="carta">
+            {% if mazo.imagen_reverso %}
+            <img src="{{ mazo.imagen_reverso.url }}" alt="Reverso" class="reverso-imagen">
+            {% else %}
+            <div class="reverso-imagen" style="background: linear-gradient(45deg, #2c3e50 0%, #34495e 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 36pt; flex-direction: column;">
+                <div style="font-size: 12pt; margin-bottom: 10px;">{{ mazo.nombre }}</div>
+                <div>🔮</div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- Reverso en posición 4 (abajo derecha) -->
+        <div class="carta">
+            {% if mazo.imagen_reverso %}
+            <img src="{{ mazo.imagen_reverso.url }}" alt="Reverso" class="reverso-imagen">
+            {% else %}
+            <div class="reverso-imagen" style="background: linear-gradient(45deg, #2c3e50 0%, #34495e 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 36pt; flex-direction: column;">
+                <div style="font-size: 12pt; margin-bottom: 10px;">{{ mazo.nombre }}</div>
+                <div>🔮</div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- Reverso en posición 3 (abajo izquierda) -->
+        <div class="carta">
+            {% if mazo.imagen_reverso %}
+            <img src="{{ mazo.imagen_reverso.url }}" alt="Reverso" class="reverso-imagen">
+            {% else %}
+            <div class="reverso-imagen" style="background: linear-gradient(45deg, #2c3e50 0%, #34495e 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 36pt; flex-direction: column;">
+                <div style="font-size: 12pt; margin-bottom: 10px;">{{ mazo.nombre }}</div>
+                <div>🔮</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

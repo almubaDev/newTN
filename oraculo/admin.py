@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Set, Mazo, Carta
+from .models import Set, Mazo, Carta, ComplementosMazo
 
 
 @admin.register(Set)
@@ -302,3 +302,108 @@ class CartaAdmin(admin.ModelAdmin):
 admin.site.site_header = 'Administración Tarotnaútica'
 admin.site.site_title = 'Admin Tarotnaútica'
 admin.site.index_title = 'Panel de Control - Tarotnaútica'
+
+
+# oraculo/admin.py - AGREGAR AL FINAL DEL ARCHIVO
+
+from .models import Set, Mazo, Carta, ComplementosMazo
+
+@admin.register(ComplementosMazo)
+class ComplementosMazoAdmin(admin.ModelAdmin):
+    """
+    Configuración del admin para complementos de mazos
+    """
+    list_display = [
+        'mazo', 'tiene_instructivo_display', 'tiene_plantilla_display',
+        'get_instructivo_size', 'get_plantilla_size', 'fecha_actualizacion'
+    ]
+    list_filter = ['fecha_creacion', 'fecha_actualizacion']
+    search_fields = ['mazo__nombre', 'mazo__codigo', 'mazo__set__nombre']
+    readonly_fields = ['fecha_creacion', 'fecha_actualizacion']
+    
+    fieldsets = (
+        ('Mazo Asociado', {
+            'fields': ('mazo',)
+        }),
+        ('Archivos Complementarios', {
+            'fields': ('instructivo', 'plantilla_impresion')
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion', 'fecha_actualizacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def tiene_instructivo_display(self, obj):
+        """Indica si tiene instructivo con iconos"""
+        if obj.tiene_instructivo():
+            return format_html(
+                '<span style="color: #10b981;"><i class="fas fa-file-text"></i> {} ({})</span>',
+                obj.get_instructivo_extension(),
+                obj.get_instructivo_size()
+            )
+        return format_html('<span style="color: #6b7280;"><i class="fas fa-minus"></i> Sin archivo</span>')
+    tiene_instructivo_display.short_description = 'Instructivo'
+    
+    def tiene_plantilla_display(self, obj):
+        """Indica si tiene plantilla con iconos"""
+        if obj.tiene_plantilla():
+            return format_html(
+                '<span style="color: #8b5cf6;"><i class="fas fa-file-image"></i> {} ({})</span>',
+                obj.get_plantilla_extension(),
+                obj.get_plantilla_size()
+            )
+        return format_html('<span style="color: #6b7280;"><i class="fas fa-minus"></i> Sin archivo</span>')
+    tiene_plantilla_display.short_description = 'Plantilla'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('mazo', 'mazo__set')
+    
+    # Acciones personalizadas
+    actions = ['limpiar_instructivos', 'limpiar_plantillas']
+    
+    def limpiar_instructivos(self, request, queryset):
+        """Eliminar archivos de instructivo seleccionados"""
+        count = 0
+        for complemento in queryset:
+            if complemento.tiene_instructivo():
+                complemento.instructivo.delete()
+                complemento.save()
+                count += 1
+        
+        self.message_user(request, f'Se eliminaron {count} instructivo{"s" if count != 1 else ""}.')
+    limpiar_instructivos.short_description = "Eliminar instructivos seleccionados"
+    
+    def limpiar_plantillas(self, request, queryset):
+        """Eliminar archivos de plantilla seleccionados"""
+        count = 0
+        for complemento in queryset:
+            if complemento.tiene_plantilla():
+                complemento.plantilla_impresion.delete()
+                complemento.save()
+                count += 1
+        
+        self.message_user(request, f'Se eliminaron {count} plantilla{"s" if count != 1 else ""}.')
+    limpiar_plantillas.short_description = "Eliminar plantillas seleccionadas"
+
+
+
+def tiene_complementos(self, obj):
+    """Indica si el mazo tiene complementos"""
+    try:
+        complementos = obj.complementos
+        if complementos.tiene_complementos():
+            count = complementos.count_complementos()
+            return format_html(
+                '<span style="color: #10b981;"><i class="fas fa-paperclip"></i> {} complemento{}</span>',
+                count, 's' if count != 1 else ''
+            )
+    except ComplementosMazo.DoesNotExist:
+        pass
+    return format_html('<span style="color: #6b7280;"><i class="fas fa-minus"></i> Sin complementos</span>')
+
+# Agregar 'tiene_complementos' a list_display en MazoAdmin:
+# list_display = [
+#     'imagen_thumbnail', 'nombre', 'codigo', 'set', 'total_cartas_mazo', 
+#     'tiene_producto', 'tiene_complementos', 'fecha_creacion'
+# ]

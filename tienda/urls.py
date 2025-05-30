@@ -25,7 +25,7 @@ urlpatterns = [
     path('admin/productos/<int:pk>/eliminar/', views.admin_producto_delete, name='admin_producto_delete'),
     
     
-      # ============== COMPRAS DE USUARIOS ============== #
+    # ============== COMPRAS DE USUARIOS ============== #
     # Mis compras (usuario logueado)
     path('mis-compras/', views.mis_compras, name='mis_compras'),
     

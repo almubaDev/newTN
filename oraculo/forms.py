@@ -98,6 +98,67 @@ class MazoForm(forms.ModelForm):
         return codigo
 
 
+class ComplementosMazoForm(forms.ModelForm):
+    """
+    Formulario para gestionar complementos de mazos
+    """
+    instructivo = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-green-500/30 text-cosmic-100 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-500 file:text-white hover:file:bg-green-600 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-colors',
+            'accept': '.pdf,.doc,.docx,.txt,.rtf'
+        })
+    )
+    
+    plantilla_impresion = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg bg-cosmic-700/50 border border-purple-500/30 text-cosmic-100 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-colors',
+            'accept': '.pdf,.ai,.psd,.eps,.zip,.rar'
+        })
+    )
+    
+    class Meta:
+        #model = ComplementosMazo
+        fields = ['instructivo', 'plantilla_impresion']
+    
+    def clean_instructivo(self):
+        """Validar archivo de instructivo"""
+        instructivo = self.cleaned_data.get('instructivo')
+        if instructivo:
+            # Validar tamaño máximo (10MB)
+            if hasattr(instructivo, 'size') and instructivo.size > 10 * 1024 * 1024:
+                raise forms.ValidationError('El archivo de instructivo no puede ser mayor a 10MB.')
+            
+            # Validar extensiones permitidas
+            allowed_extensions = ['.pdf', '.doc', '.docx', '.txt', '.rtf']
+            if hasattr(instructivo, 'name'):
+                ext = '.' + instructivo.name.split('.')[-1].lower()
+                if ext not in allowed_extensions:
+                    raise forms.ValidationError(f'Formato no permitido. Use: {", ".join(allowed_extensions)}')
+        
+        return instructivo
+    
+    def clean_plantilla_impresion(self):
+        """Validar archivo de plantilla"""
+        plantilla = self.cleaned_data.get('plantilla_impresion')
+        if plantilla:
+            # Validar tamaño máximo (50MB para archivos de diseño)
+            if hasattr(plantilla, 'size') and plantilla.size > 50 * 1024 * 1024:
+                raise forms.ValidationError('El archivo de plantilla no puede ser mayor a 50MB.')
+            
+            # Validar extensiones permitidas
+            allowed_extensions = ['.pdf', '.ai', '.psd', '.eps', '.zip', '.rar', '.svg']
+            if hasattr(plantilla, 'name'):
+                ext = '.' + plantilla.name.split('.')[-1].lower()
+                if ext not in allowed_extensions:
+                    raise forms.ValidationError(f'Formato no permitido. Use: {", ".join(allowed_extensions)}')
+        
+        return plantilla
+
+
+
+
 class CartaForm(forms.ModelForm):
     """
     Formulario para crear y editar Cartas individuales

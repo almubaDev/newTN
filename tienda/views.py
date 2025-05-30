@@ -543,7 +543,7 @@ def detalle_compra(request, compra_id):
             cartas_producto = compra.producto.mazo.cartas.all().order_by('numero')
         
         context = {
-            'title': f'Compra: {compra.nombre_producto}',
+            'title': f'Compra: {compra.producto.mazo.nombre}',
             'compra': compra,
             'cartas_producto': cartas_producto,
         }
@@ -554,5 +554,3 @@ def detalle_compra(request, compra_id):
         print(f"Error en detalle_compra: {e}")
         messages.error(request, 'Error al cargar el detalle de la compra.')
         return redirect('tienda:mis_compras')
-
-
