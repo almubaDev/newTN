@@ -1,4 +1,4 @@
-# finanzas/views.py - VISTA COMPLETA CORREGIDA
+# finanzas/views.py - SERVICIOS PAYPAL CORREGIDOS
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -14,6 +14,8 @@ import requests
 import uuid
 from decimal import Decimal
 import logging
+import base64
+import time
 
 from .models import Carrito, ItemCarrito, OrdenCompra, ItemOrden, LogWebhookPayPal
 from tienda.models import TarotProduct
@@ -210,23 +212,86 @@ def carrito_widget(request):
         })
 
 
-# ============== NUEVAS VISTAS PAYPAL ============== #
-
+# ============== SERVICIO PAYPAL COMPLETO ============== #
 
 class PayPalService:
     """
-    Servicio PayPal con configuración corregida
+    Servicio PayPal completo con autenticación y gestión de órdenes
     """
+    
+    @staticmethod
+    def get_access_token():
+        """
+        Obtiene token de acceso de PayPal usando Client Credentials
+        """
+        try:
+            print(f"🔐 Obteniendo token de PayPal...")
+            print(f"   Mode: {settings.PAYPAL_MODE}")
+            print(f"   Base URL: {settings.PAYPAL_BASE_URL}")
+            
+            # Verificar configuración
+            if not settings.PAYPAL_CLIENT_ID or not settings.PAYPAL_CLIENT_SECRET:
+                print(f"   ❌ Configuración PayPal incompleta")
+                return None
+            
+            # Crear credenciales básicas
+            credentials = f"{settings.PAYPAL_CLIENT_ID}:{settings.PAYPAL_CLIENT_SECRET}"
+            encoded_credentials = base64.b64encode(credentials.encode()).decode()
+            
+            # URL del endpoint de autenticación
+            url = f"{settings.PAYPAL_BASE_URL}/v1/oauth2/token"
+            
+            headers = {
+                'Accept': 'application/json',
+                'Accept-Language': 'en_US',
+                'Authorization': f'Basic {encoded_credentials}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+            
+            data = {
+                'grant_type': 'client_credentials'
+            }
+            
+            print(f"   📤 Solicitando token...")
+            response = requests.post(url, headers=headers, data=data, timeout=15)
+            
+            print(f"   📥 Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                access_token = token_data.get('access_token')
+                print(f"   ✅ Token obtenido exitosamente")
+                return access_token
+            else:
+                print(f"   ❌ Error obteniendo token: {response.text}")
+                logger.error(f"Error PayPal auth: {response.status_code} - {response.text}")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            print(f"   💥 Error de conexión: {e}")
+            logger.error(f"Error de conexión PayPal auth: {e}")
+            return None
+        except Exception as e:
+            print(f"   💥 Error inesperado: {e}")
+            logger.error(f"Error inesperado PayPal auth: {e}")
+            return None
     
     @staticmethod
     def crear_orden_paypal(orden_compra, request=None):
         """
-        Crear orden PayPal - ERRORES CORREGIDOS
+        Crear orden PayPal - VERSIÓN CORREGIDA
         """
+        print(f"\n💰 === CREANDO ORDEN PAYPAL ===")
+        print(f"   Orden: {orden_compra.codigo_orden}")
+        print(f"   Total: ${orden_compra.total}")
+        
+        # Obtener token de acceso
         token = PayPalService.get_access_token()
         if not token:
-            logger.error("No se pudo obtener token de PayPal")
+            print(f"   ❌ No se pudo obtener token de PayPal")
             return None
+        
+        print(f"   ✅ Token obtenido")
         
         url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders"
         
@@ -234,6 +299,7 @@ class PayPalService:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {token}',
             'PayPal-Request-Id': str(uuid.uuid4()),
+            'Prefer': 'return=representation'
         }
         
         # URLs dinámicas
@@ -245,11 +311,10 @@ class PayPalService:
         return_url = f"{base_url}/cart/pago-exitoso/{orden_compra.codigo_orden}/"
         cancel_url = f"{base_url}/cart/pago-cancelado/{orden_compra.codigo_orden}/"
         
-        print(f"💰 Creando orden PayPal corregida:")
-        print(f"   Orden: {orden_compra.codigo_orden}")
-        print(f"   Total: ${orden_compra.total}")
+        print(f"   📍 Return URL: {return_url}")
+        print(f"   📍 Cancel URL: {cancel_url}")
         
-        # Items para PayPal
+        # Preparar items para PayPal
         items = []
         for item in orden_compra.items.all():
             items.append({
@@ -263,7 +328,9 @@ class PayPalService:
                 "category": "DIGITAL_GOODS"
             })
         
-        # CONFIGURACIÓN CORREGIDA - SIN ERRORES
+        print(f"   📋 Items preparados: {len(items)}")
+        
+        # Payload para PayPal - CONFIGURACIÓN MÍNIMA Y SEGURA
         data = {
             "intent": "CAPTURE",
             "purchase_units": [{
@@ -279,124 +346,64 @@ class PayPalService:
                     }
                 },
                 "items": items,
-                "description": f"Tarotnaútica - Orden {orden_compra.codigo_orden}",
-                "soft_descriptor": "TAROTNAUTICA"
-                # ❌ REMOVIDO: payee con merchant_id incorrecto
+                "description": f"Tarotnaútica - Orden {orden_compra.codigo_orden}"
             }],
             "application_context": {
                 "return_url": return_url,
                 "cancel_url": cancel_url,
                 "brand_name": "Tarotnaútica",
-                "landing_page": "BILLING",  # ✅ CORREGIDO: BILLING en lugar de GUEST_CHECKOUT
+                "landing_page": "BILLING",
                 "user_action": "PAY_NOW",
                 "shipping_preference": "NO_SHIPPING"
-                # ❌ REMOVIDO: payment_method que causaba problemas
             }
         }
         
         try:
-            print(f"   📤 Enviando orden corregida a PayPal...")
-            print(f"   📋 Landing page: BILLING")
-            print(f"   📋 User action: PAY_NOW")
+            print(f"   📤 Enviando orden a PayPal...")
             
             response = requests.post(
                 url, 
                 headers=headers, 
                 json=data, 
-                timeout=15
+                timeout=30
             )
             
             print(f"   📥 Response status: {response.status_code}")
             
             if response.status_code in [200, 201]:
                 paypal_response = response.json()
-                print(f"   ✅ Orden creada exitosamente: {paypal_response.get('id')}")
+                order_id = paypal_response.get('id')
+                print(f"   🎉 ¡Orden creada exitosamente!")
+                print(f"   📋 PayPal Order ID: {order_id}")
                 return paypal_response
             else:
-                print(f"   ❌ Error PayPal: {response.text}")
+                print(f"   ❌ Error PayPal: {response.status_code}")
+                print(f"   📄 Response: {response.text}")
                 logger.error(f"Error PayPal: {response.status_code} - {response.text}")
                 return None
                 
+        except requests.exceptions.Timeout:
+            print(f"   ⏰ Timeout creando orden PayPal")
+            logger.error("Timeout creando orden PayPal")
+            return None
         except requests.exceptions.RequestException as e:
+            print(f"   💥 Error de conexión: {e}")
             logger.error(f"Error de conexión creando orden PayPal: {e}")
             return None
         except Exception as e:
+            print(f"   💥 Error inesperado: {e}")
             logger.error(f"Error inesperado creando orden PayPal: {e}")
             return None
+        finally:
+            print("=" * 35 + "\n")
 
 
-# ALTERNATIVA CON CONFIGURACIÓN MÍNIMA (MÁS SEGURA)
-class PayPalServiceMinimal:
-    """
-    Versión mínima sin configuraciones problemáticas
-    """
-    
-    @staticmethod
-    def crear_orden_simple(orden_compra, request=None):
-        """
-        Crear orden con configuración mínima - MÁXIMA COMPATIBILIDAD
-        """
-        token = PayPalService.get_access_token()
-        if not token:
-            return None
-        
-        url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}',
-        }
-        
-        # URLs
-        if request:
-            base_url = request.build_absolute_uri('/').rstrip('/')
-        else:
-            base_url = settings.DOMAIN_URL
-        
-        return_url = f"{base_url}/cart/pago-exitoso/{orden_compra.codigo_orden}/"
-        cancel_url = f"{base_url}/cart/pago-cancelado/{orden_compra.codigo_orden}/"
-        
-        # CONFIGURACIÓN MÍNIMA Y SEGURA
-        data = {
-            "intent": "CAPTURE",
-            "purchase_units": [{
-                "reference_id": str(orden_compra.codigo_orden),
-                "amount": {
-                    "currency_code": "USD",
-                    "value": str(orden_compra.total)
-                },
-                "description": f"Compra en Tarotnaútica - {orden_compra.codigo_orden}"
-            }],
-            "application_context": {
-                "return_url": return_url,
-                "cancel_url": cancel_url,
-                "brand_name": "Tarotnaútica",
-                "landing_page": "BILLING",  # BILLING permite tanto PayPal como tarjetas
-                "user_action": "PAY_NOW",
-                "shipping_preference": "NO_SHIPPING"
-            }
-        }
-        
-        try:
-            print(f"💰 Creando orden simple para {orden_compra.codigo_orden}")
-            
-            response = requests.post(url, headers=headers, json=data, timeout=15)
-            
-            if response.status_code in [200, 201]:
-                return response.json()
-            else:
-                print(f"Error: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error creando orden simple: {e}")
-            return None
+# ============== VISTA PRINCIPAL CORREGIDA ============== #
 
-
-# ACTUALIZAR LA VISTA PRINCIPAL
 @login_required
 def crear_orden_paypal(request):
     """
-    Crear orden PayPal - USANDO VERSIÓN CORREGIDA
+    Crear orden PayPal - VERSIÓN CORREGIDA CON SERVICIO COMPLETO
     """
     if request.method != 'POST':
         return JsonResponse({
@@ -405,26 +412,37 @@ def crear_orden_paypal(request):
         }, status=405)
     
     try:
-        print(f"\n🛒 === CREANDO ORDEN PAYPAL CORREGIDA ===")
+        print(f"\n🛒 === INICIANDO CREACIÓN DE ORDEN ===")
         print(f"Usuario: {request.user.email}")
         
-        # Verificar configuración
-        if not all([settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET]):
+        # Verificar configuración PayPal
+        configuracion_ok = all([
+            settings.PAYPAL_CLIENT_ID,
+            settings.PAYPAL_CLIENT_SECRET,
+            settings.PAYPAL_BASE_URL,
+            settings.PAYPAL_MODE
+        ])
+        
+        if not configuracion_ok:
+            print(f"❌ Configuración PayPal incompleta")
             return JsonResponse({
                 'success': False,
-                'message': 'Configuración de pagos no disponible'
+                'message': 'Configuración de pagos no disponible temporalmente'
             }, status=500)
         
-        # Obtener carrito
+        print(f"✅ Configuración PayPal verificada")
+        
+        # Obtener carrito del usuario
         carrito = get_object_or_404(Carrito, usuario=request.user)
         
         if not carrito.items.exists():
+            print(f"❌ Carrito vacío")
             return JsonResponse({
                 'success': False,
                 'message': 'Tu carrito está vacío'
             }, status=400)
         
-        print(f"🛍️ Carrito: {carrito.items.count()} items, total: ${carrito.total}")
+        print(f"🛍️ Carrito encontrado: {carrito.items.count()} items, total: ${carrito.total}")
         
         # Crear OrdenCompra
         orden = OrdenCompra.objects.create(
@@ -436,38 +454,45 @@ def crear_orden_paypal(request):
             estado='creada'
         )
         
-        print(f"📋 Orden creada: {orden.codigo_orden}")
+        print(f"📋 OrdenCompra creada: {orden.codigo_orden}")
         
-        # Crear ItemOrden
+        # Crear ItemOrden para cada producto
+        items_creados = []
         for item_carrito in carrito.items.select_related('producto', 'producto__mazo'):
-            ItemOrden.objects.create(
+            item_orden = ItemOrden.objects.create(
                 orden=orden,
                 producto=item_carrito.producto,
                 cantidad=item_carrito.cantidad,
                 precio_unitario=item_carrito.precio_unitario
             )
+            items_creados.append(item_orden)
         
-        # USAR LA VERSIÓN CORREGIDA
+        print(f"📦 Items de orden creados: {len(items_creados)}")
+        
+        # Crear orden en PayPal usando el servicio completo
         paypal_response = PayPalService.crear_orden_paypal(orden, request)
         
-        # FALLBACK: Si falla, usar versión mínima
-        if not paypal_response:
-            print("⚠️ Intentando con configuración mínima...")
-            paypal_response = PayPalServiceMinimal.crear_orden_simple(orden, request)
-        
         if paypal_response and 'id' in paypal_response:
+            # Actualizar orden con datos de PayPal
             orden.paypal_order_id = paypal_response['id']
             orden.estado = 'pendiente'
             orden.datos_paypal = paypal_response
             orden.save()
             
-            print(f"🎉 ¡Orden PayPal creada!")
-            print(f"   PayPal ID: {paypal_response['id']}")
+            print(f"🎉 ¡ÉXITO! Orden PayPal creada")
+            print(f"   Order ID: {paypal_response['id']}")
+            print(f"   Estado: {orden.estado}")
             
             return JsonResponse({
                 'success': True,
                 'order_id': paypal_response['id'],
-                'message': 'Orden creada exitosamente'
+                'message': 'Orden creada exitosamente',
+                'debug_info': {
+                    'orden_codigo': orden.codigo_orden,
+                    'paypal_order_id': paypal_response['id'],
+                    'total': str(orden.total),
+                    'items_count': len(items_creados)
+                }
             })
         else:
             print(f"💥 Error: No se pudo crear orden en PayPal")
@@ -476,19 +501,24 @@ def crear_orden_paypal(request):
             
             return JsonResponse({
                 'success': False,
-                'message': 'Error al procesar con PayPal. Intenta nuevamente.'
+                'message': 'Error al procesar con PayPal. Por favor intenta nuevamente.'
             }, status=500)
             
     except Exception as e:
-        logger.error(f"💥 Error crítico: {e}")
+        print(f"💥 Error crítico: {e}")
+        logger.error(f"Error crítico en crear_orden_paypal: {e}")
         import traceback
         traceback.print_exc()
         
         return JsonResponse({
             'success': False,
-            'message': 'Error interno del servidor.'
+            'message': 'Error interno del servidor. Intenta nuevamente.'
         }, status=500)
+    finally:
+        print("=" * 50 + "\n")
 
+
+# ============== RESTO DE VISTAS (WEBHOOKS, ETC.) ============== #
 
 @csrf_exempt
 def webhook_paypal(request):
@@ -503,6 +533,8 @@ def webhook_paypal(request):
         webhook_data = json.loads(request.body)
         event_type = webhook_data.get('event_type')
         resource = webhook_data.get('resource', {})
+        
+        print(f"📨 Webhook PayPal recibido: {event_type}")
         
         # Guardar log del webhook
         log = LogWebhookPayPal.objects.create(
@@ -544,6 +576,7 @@ def procesar_orden_aprobada(webhook_data, log):
                 orden.save()
                 log.orden_relacionada = orden
                 log.save()
+                print(f"✅ Orden aprobada: {orden.codigo_orden}")
                 
     except Exception as e:
         log.error_mensaje = str(e)
@@ -578,6 +611,7 @@ def procesar_pago_completado(webhook_data, log):
                 log.orden_relacionada = orden
                 log.save()
                 
+                print(f"✅ Pago completado: {orden.codigo_orden}")
                 logger.info(f"Pago completado para orden {orden.codigo_orden}, {len(compras_creadas)} productos activados")
                 
     except Exception as e:
@@ -614,13 +648,12 @@ def pago_cancelado(request, codigo_orden):
     return redirect('finanzas:ver_carrito')
 
 
-
-# ============== DASHBOARD DE FINANZAS - CORREGIDO ============== #
+# ============== DASHBOARD DE FINANZAS ============== #
 
 @staff_member_required
 def dashboard_finanzas(request):
     """
-    Dashboard principal de finanzas - CORREGIDO COMPLETAMENTE
+    Dashboard principal de finanzas
     """
     # Obtener fechas para filtros
     hoy = timezone.now().date()
@@ -676,79 +709,7 @@ def dashboard_finanzas(request):
         estado='pagada'
     ).aggregate(promedio=Avg('total'))['promedio'] or Decimal('0')
     
-    # ============== GRÁFICOS ============== #
-    
-    # Ventas últimos 30 días
-    ventas_30_dias = []
-    for i in range(30):
-        fecha = hoy - timedelta(days=i)
-        ingreso_dia = OrdenCompra.objects.filter(
-            estado='pagada',
-            fecha_pago__date=fecha
-        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
-        
-        ventas_30_dias.append({
-            'fecha': fecha.strftime('%d/%m'),
-            'ingresos': float(ingreso_dia),
-            'fecha_completa': fecha.isoformat()
-        })
-    
-    ventas_30_dias.reverse()  # Mostrar del más antiguo al más reciente
-    
-    # Ventas por mes (últimos 12 meses)
-    ventas_12_meses = []
-    for i in range(12):
-        fecha_mes = hoy.replace(day=1) - timedelta(days=32*i)
-        inicio_mes_calc = fecha_mes.replace(day=1)
-        fin_mes = (inicio_mes_calc.replace(month=inicio_mes_calc.month % 12 + 1, day=1) - timedelta(days=1)) if inicio_mes_calc.month < 12 else inicio_mes_calc.replace(year=inicio_mes_calc.year + 1, month=1, day=1) - timedelta(days=1)
-        
-        ingreso_mes = OrdenCompra.objects.filter(
-            estado='pagada',
-            fecha_pago__date__gte=inicio_mes_calc,
-            fecha_pago__date__lte=fin_mes
-        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
-        
-        ventas_12_meses.append({
-            'mes': calendar.month_name[inicio_mes_calc.month][:3],
-            'año': inicio_mes_calc.year,
-            'ingresos': float(ingreso_mes)
-        })
-    
-    ventas_12_meses.reverse()
-    
-    # ============== TOP PRODUCTOS - CORREGIDO ============== #
-    
-    top_productos = ItemOrden.objects.filter(
-        orden__estado='pagada',
-        orden__fecha_pago__date__gte=hace_30_dias
-    ).values(
-        'producto__mazo__nombre',
-        'producto__mazo__set__nombre',
-        'producto__id'
-    ).annotate(
-        cantidad_vendida=Sum('cantidad'),
-        # CALCULAR subtotal usando F() y operaciones matemáticas
-        ingresos_generados=Sum(F('cantidad') * F('precio_unitario')),
-        ordenes_count=Count('orden', distinct=True)
-    ).order_by('-cantidad_vendida')[:10]
-    
-    # ============== USUARIOS TOP - CORREGIDO ============== #
-    
-    top_usuarios = OrdenCompra.objects.filter(
-        estado='pagada',
-        fecha_pago__date__gte=hace_30_dias
-    ).values(
-        'usuario__email',
-        'usuario__nombre'
-    ).annotate(
-        total_gastado=Sum('total'),
-        ordenes_count=Count('id'),
-        productos_count=Sum('items__cantidad')
-    ).order_by('-total_gastado')[:10]
-    
-    # ============== CONVERSIÓN ============== #
-    
-    # Carritos vs Compras (últimos 30 días)
+    # Otras métricas básicas
     carritos_activos = Carrito.objects.filter(
         fecha_actualizacion__date__gte=hace_30_dias,
         items__isnull=False
@@ -761,77 +722,71 @@ def dashboard_finanzas(request):
     
     tasa_conversion = (compras_completadas / carritos_activos * 100) if carritos_activos > 0 else 0
     
-    # ============== MÉTODOS DE PAGO - CORREGIDO ============== #
-    
-    metodos_pago = OrdenCompra.objects.filter(
-        estado='pagada',
-        fecha_pago__date__gte=hace_30_dias
-    ).aggregate(
-        paypal_count=Count('id', filter=Q(paypal_payment_id__isnull=False)),
-        paypal_ingresos=Sum('total', filter=Q(paypal_payment_id__isnull=False)),
-        otro_count=Count('id', filter=Q(paypal_payment_id__isnull=True)),
-        otro_ingresos=Sum('total', filter=Q(paypal_payment_id__isnull=True))
-    )
-    
-    # Formatear métodos de pago para el template
-    metodos_pago_formateados = []
-    if metodos_pago['paypal_count']:
-        metodos_pago_formateados.append({
-            'metodo': 'PayPal',
-            'count': metodos_pago['paypal_count'],
-            'ingresos': metodos_pago['paypal_ingresos'] or Decimal('0')
-        })
-    if metodos_pago['otro_count']:
-        metodos_pago_formateados.append({
-            'metodo': 'Otro',
-            'count': metodos_pago['otro_count'],
-            'ingresos': metodos_pago['otro_ingresos'] or Decimal('0')
+    # Datos básicos para gráficos (simplificado)
+    ventas_30_dias = []
+    for i in range(30):
+        fecha = hoy - timedelta(days=i)
+        ingreso_dia = OrdenCompra.objects.filter(
+            estado='pagada',
+            fecha_pago__date=fecha
+        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
+        
+        ventas_30_dias.append({
+            'fecha': fecha.strftime('%d/%m'),
+            'ingresos': float(ingreso_dia)
         })
     
-    # ============== CONTEXTO ============== #
+    ventas_30_dias.reverse()
     
+    # Ventas por mes (últimos 12 meses) - simplificado
+    ventas_12_meses = []
+    for i in range(12):
+        fecha_mes = hoy.replace(day=1) - timedelta(days=32*i)
+        inicio_mes_calc = fecha_mes.replace(day=1)
+        
+        ingreso_mes = OrdenCompra.objects.filter(
+            estado='pagada',
+            fecha_pago__date__gte=inicio_mes_calc,
+            fecha_pago__date__lt=inicio_mes_calc.replace(month=inicio_mes_calc.month % 12 + 1) if inicio_mes_calc.month < 12 else inicio_mes_calc.replace(year=inicio_mes_calc.year + 1, month=1)
+        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
+        
+        ventas_12_meses.append({
+            'mes': calendar.month_name[inicio_mes_calc.month][:3],
+            'año': inicio_mes_calc.year,
+            'ingresos': float(ingreso_mes)
+        })
+    
+    ventas_12_meses.reverse()
+    
+    # Context simplificado
     context = {
         'title': 'Dashboard de Finanzas',
-        
-        # Métricas principales
         'ingresos': {
             'hoy': ingresos_hoy,
             'semana': ingresos_semana,
             'mes': ingresos_mes,
             'año': ingresos_año,
         },
-        
         'ordenes': ordenes_stats,
-        
         'productos_vendidos': {
             'hoy': productos_vendidos_hoy,
             'mes': productos_vendidos_mes,
         },
-        
         'ticket_promedio': ticket_promedio,
         'tasa_conversion': round(tasa_conversion, 2),
-        
-        # Datos para gráficos
         'ventas_30_dias': ventas_30_dias,
         'ventas_12_meses': ventas_12_meses,
-        
-        # Top lists
-        'top_productos': top_productos,
-        'top_usuarios': top_usuarios,
-        'metodos_pago': metodos_pago_formateados,
-        
-        # Contadores adicionales
         'carritos_activos': carritos_activos,
         'compras_completadas': compras_completadas,
-        
-        # Fechas para referencia
-        'fecha_actual': timezone.now(),  # datetime completo en lugar de .date()
-        'periodo_analisis': '30 días',
+        'fecha_actual': timezone.now(),
+        'top_productos': [],  # Simplificado por ahora
+        'top_usuarios': [],   # Simplificado por ahora
+        'metodos_pago': [],   # Simplificado por ahora
     }
     
     return render(request, 'finanzas/dashboard.html', context)
 
-
+# Otras vistas simplificadas
 @staff_member_required
 def reportes_detallados(request):
     """
@@ -841,8 +796,6 @@ def reportes_detallados(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     estado_filtro = request.GET.get('estado', 'pagada')
-    producto_filtro = request.GET.get('producto')
-    usuario_filtro = request.GET.get('usuario')
     
     # Fechas por defecto (último mes)
     if not fecha_inicio:
@@ -856,18 +809,10 @@ def reportes_detallados(request):
     # Aplicar filtros
     if estado_filtro:
         ordenes = ordenes.filter(estado=estado_filtro)
-    
     if fecha_inicio:
         ordenes = ordenes.filter(fecha_creacion__date__gte=fecha_inicio)
-    
     if fecha_fin:
         ordenes = ordenes.filter(fecha_creacion__date__lte=fecha_fin)
-    
-    if producto_filtro:
-        ordenes = ordenes.filter(items__producto_id=producto_filtro)
-    
-    if usuario_filtro:
-        ordenes = ordenes.filter(usuario_id=usuario_filtro)
     
     # Estadísticas del período filtrado
     stats_periodo = ordenes.aggregate(
@@ -883,31 +828,17 @@ def reportes_detallados(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Listas para filtros
-    productos_disponibles = TarotProduct.objects.select_related('mazo').all()
-    from user.models import CustomUser
-    usuarios_con_compras = CustomUser.objects.filter(ordenes_compra__isnull=False).distinct()
-    
     context = {
         'title': 'Reportes Detallados',
         'page_obj': page_obj,
         'stats_periodo': stats_periodo,
-        
-        # Filtros actuales
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'estado_filtro': estado_filtro,
-        'producto_filtro': producto_filtro,
-        'usuario_filtro': usuario_filtro,
-        
-        # Opciones para filtros
         'estados_opciones': OrdenCompra.ESTADO_CHOICES,
-        'productos_disponibles': productos_disponibles,
-        'usuarios_con_compras': usuarios_con_compras,
     }
     
     return render(request, 'finanzas/reportes.html', context)
-
 
 @staff_member_required
 def exportar_ventas_csv(request):
@@ -915,7 +846,6 @@ def exportar_ventas_csv(request):
     Exportar ventas a CSV
     """
     import csv
-    from django.http import HttpResponse
     
     # Obtener parámetros
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -958,7 +888,6 @@ def exportar_ventas_csv(request):
             ])
     
     return response
-
 
 @staff_member_required  
 def api_metricas_tiempo_real(request):
