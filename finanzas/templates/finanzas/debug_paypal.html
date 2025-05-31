@@ -1,0 +1,288 @@
+<!-- finanzas/templates/finanzas/debug_paypal.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'finanzas:dashboard' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-mystical font-bold text-red-300">
+                    <i class="fas fa-bug mr-3"></i>
+                    Debug PayPal Configuration
+                </h1>
+            </div>
+            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <p class="text-red-200 text-sm">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Esta vista solo está disponible en modo DEBUG para diagnosticar problemas con PayPal.
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Configuration Status -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20">
+                <h2 class="text-xl font-mystical font-semibold text-primary-300 mb-4">
+                    <i class="fas fa-cog mr-2"></i>
+                    Estado de Configuración
+                </h2>
+                
+                {% if debug_info.configuracion_completa %}
+                    <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-400 mr-3 text-xl"></i>
+                            <span class="text-green-300 font-semibold">Configuración Completa</span>
+                        </div>
+                        <p class="text-green-200 text-sm mt-1">PayPal está configurado y conectado correctamente.</p>
+                    </div>
+                {% else %}
+                    <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-times-circle text-red-400 mr-3 text-xl"></i>
+                            <span class="text-red-300 font-semibold">Configuración Incompleta</span>
+                        </div>
+                        <p class="text-red-200 text-sm mt-1">Hay problemas con la configuración de PayPal.</p>
+                    </div>
+                {% endif %}
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-cosmic-300">Modo PayPal:</span>
+                        <span class="{% if debug_info.config_status.mode == 'sandbox' %}text-gold-400{% else %}text-green-400{% endif %} font-mono">
+                            {{ debug_info.config_status.mode|upper }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-cosmic-300">Client ID:</span>
+                        <span class="text-cosmic-200 font-mono text-sm">{{ debug_info.config_status.client_id_preview }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-cosmic-300">Configurado:</span>
+                        {% if debug_info.config_status.configured %}
+                            <span class="text-green-400"><i class="fas fa-check mr-1"></i>Sí</span>
+                        {% else %}
+                            <span class="text-red-400"><i class="fas fa-times mr-1"></i>No</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gold-500/20">
+                <h2 class="text-xl font-mystical font-semibold text-gold-300 mb-4">
+                    <i class="fas fa-tools mr-2"></i>
+                    Acciones de Debug
+                </h2>
+                
+                <div class="space-y-3">
+                    <button onclick="testPayPalConnection()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-wifi mr-2"></i>
+                        Probar Conexión PayPal
+                    </button>
+                    
+                    <button onclick="testOrderCreation()" 
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Simular Creación de Orden
+                    </button>
+                    
+                    <a href="{% url 'finanzas:ver_carrito' %}" 
+                       class="block w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors text-center">
+                        <i class="fas fa-cart-arrow-down mr-2"></i>
+                        Ir al Carrito Real
+                    </a>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-cosmic-600">
+                    <h4 class="text-sm font-semibold text-cosmic-300 mb-2">Links Útiles</h4>
+                    <div class="space-y-1 text-xs">
+                        <a href="https://developer.paypal.com/developer/applications/" 
+                           target="_blank" 
+                           class="block text-gold-400 hover:text-gold-300 transition-colors">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            PayPal Developer Dashboard
+                        </a>
+                        <a href="https://developer.paypal.com/docs/api/orders/v2/" 
+                           target="_blank" 
+                           class="block text-primary-400 hover:text-primary-300 transition-colors">
+                            <i class="fas fa-book mr-1"></i>
+                            PayPal Orders API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Information -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Settings Info -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-mystic-500/20">
+                <h3 class="text-lg font-mystical font-semibold text-mystic-300 mb-4">
+                    <i class="fas fa-cogs mr-2"></i>
+                    Configuración de Settings
+                </h3>
+                
+                <div class="space-y-3 text-sm">
+                    {% for key, value in debug_info.settings_info.items %}
+                        <div class="flex justify-between items-center py-2 border-b border-cosmic-600">
+                            <span class="text-cosmic-400">{{ key }}:</span>
+                            <span class="text-cosmic-200 font-mono">
+                                {% if value %}{{ value }}{% else %}<span class="text-red-400">NOT SET</span>{% endif %}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- URLs Info -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-green-500/20">
+                <h3 class="text-lg font-mystical font-semibold text-green-300 mb-4">
+                    <i class="fas fa-link mr-2"></i>
+                    URLs y Endpoints
+                </h3>
+                
+                <div class="space-y-3 text-sm">
+                    {% for key, value in debug_info.urls_info.items %}
+                        <div class="py-2 border-b border-cosmic-600">
+                            <div class="text-cosmic-400 mb-1">{{ key|title }}:</div>
+                            <div class="text-cosmic-200 font-mono text-xs break-all bg-cosmic-800/50 p-2 rounded">
+                                {{ value }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Output -->
+        <div class="mt-8">
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-cosmic-500/20">
+                <h3 class="text-lg font-mystical font-semibold text-cosmic-300 mb-4">
+                    <i class="fas fa-terminal mr-2"></i>
+                    Output de Debug
+                </h3>
+                <div id="debug-output" class="bg-cosmic-900/50 rounded-lg p-4 font-mono text-sm text-green-400 min-h-24">
+                    Haz clic en las acciones de arriba para ver el output del debug...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function logToDebugOutput(message, type = 'info') {
+    const output = document.getElementById('debug-output');
+    const timestamp = new Date().toLocaleTimeString();
+    const colors = {
+        'info': 'text-green-400',
+        'error': 'text-red-400',
+        'warning': 'text-gold-400',
+        'success': 'text-green-300'
+    };
+    
+    const newLine = document.createElement('div');
+    newLine.className = colors[type] || 'text-cosmic-300';
+    newLine.innerHTML = `[${timestamp}] ${message}`;
+    
+    output.appendChild(newLine);
+    output.scrollTop = output.scrollHeight;
+}
+
+function testPayPalConnection() {
+    logToDebugOutput('🔐 Probando conexión con PayPal...', 'info');
+    
+    // Esta sería una llamada a un endpoint específico de debug
+    fetch('/cart/debug/test-connection/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            logToDebugOutput('✅ Conexión PayPal exitosa', 'success');
+            logToDebugOutput(`🎫 Token obtenido: ${data.token_preview || 'N/A'}`, 'info');
+        } else {
+            logToDebugOutput('❌ Error de conexión PayPal', 'error');
+            logToDebugOutput(`📄 Error: ${data.error || 'Unknown'}`, 'error');
+        }
+    })
+    .catch(error => {
+        logToDebugOutput('💥 Error en la prueba de conexión', 'error');
+        logToDebugOutput(`📄 ${error.message}`, 'error');
+    });
+}
+
+function testOrderCreation() {
+    logToDebugOutput('🛒 Simulando creación de orden PayPal...', 'info');
+    
+    // Llamada al endpoint normal de creación de orden para debug
+    fetch('/cart/paypal/crear-orden/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            logToDebugOutput('✅ Orden PayPal creada exitosamente', 'success');
+            logToDebugOutput(`📋 Order ID: ${data.order_id}`, 'info');
+            if (data.debug_info) {
+                logToDebugOutput(`💰 Total: ${data.debug_info.total}`, 'info');
+                logToDebugOutput(`📦 Items: ${data.debug_info.items_count}`, 'info');
+            }
+        } else {
+            logToDebugOutput('❌ Error creando orden PayPal', 'error');
+            logToDebugOutput(`📄 Error: ${data.message || 'Unknown'}`, 'error');
+        }
+    })
+    .catch(error => {
+        logToDebugOutput('💥 Error en la simulación de orden', 'error');
+        logToDebugOutput(`📄 ${error.message}`, 'error');
+    });
+}
+
+// Limpiar output al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    logToDebugOutput('🚀 Debug PayPal inicializado', 'success');
+    logToDebugOutput('📋 Configuración cargada', 'info');
+    {% if debug_info.configuracion_completa %}
+        logToDebugOutput('✅ PayPal configurado correctamente', 'success');
+    {% else %}
+        logToDebugOutput('⚠️ Problemas de configuración detectados', 'warning');
+    {% endif %}
+});
+</script>
+{% endblock %}
+{% endblock %}

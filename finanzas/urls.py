@@ -1,4 +1,4 @@
-# finanzas/urls.py
+# finanzas/urls.py - URLS ACTUALIZADAS CON DEBUG
 from django.urls import path
 from . import views
 
@@ -31,6 +31,10 @@ urlpatterns = [
     # URLs de retorno PayPal
     path('pago-exitoso/<str:codigo_orden>/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-cancelado/<str:codigo_orden>/', views.pago_cancelado, name='pago_cancelado'),
+    
+    # ============== DEBUG PAYPAL (Solo en DEBUG mode) ============== #
+    path('debug/paypal/', views.debug_paypal, name='debug_paypal'),
+    path('debug/test-connection/', views.test_paypal_connection, name='test_paypal_connection'),
     
     # ============== DASHBOARD DE FINANZAS ============== #
     # Dashboard principal (solo staff)

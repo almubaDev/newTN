@@ -175,12 +175,12 @@ PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = config('PAYPAL_MODE', default='sandbox')  # 'sandbox' o 'live'
 PAYPAL_WEBHOOK_ID = config('PAYPAL_WEBHOOK_ID', default='')
 
-# URLs de PayPal
+# URLs de PayPal - CORREGIDAS SEGÚN LA DOCUMENTACIÓN OFICIAL
 if PAYPAL_MODE == 'live':
-    PAYPAL_BASE_URL = 'https://api.paypal.com'
+    PAYPAL_BASE_URL = 'https://api-m.paypal.com'  # CORRECTO: api-m.paypal.com
     PAYPAL_WEB_URL = 'https://www.paypal.com'
 else:
-    PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com'
+    PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com'  # CORRECTO: api-m.sandbox.paypal.com
     PAYPAL_WEB_URL = 'https://www.sandbox.paypal.com'
 
 # Configuración de dominio
@@ -194,7 +194,7 @@ PAYPAL_LOCALE = "es_ES"
 
 # Logging en desarrollo
 if DEBUG:
-    print(f"\n🔧 === CONFIGURACIÓN PAYPAL ===")
+    print(f"\n🔧 === CONFIGURACIÓN PAYPAL CORREGIDA ===")
     print(f"   Mode: {PAYPAL_MODE}")
     print(f"   Base URL: {PAYPAL_BASE_URL}")
     print(f"   Client ID: {PAYPAL_CLIENT_ID[:15] if PAYPAL_CLIENT_ID else 'NOT SET'}...")
@@ -202,7 +202,7 @@ if DEBUG:
     print(f"   Domain: {DOMAIN_URL}")
     print(f"   Webhook URL: {PAYPAL_WEBHOOK_URL}")
     print(f"   Guest Checkout: {PAYPAL_GUEST_CHECKOUT}")
-    print("=" * 35)
+    print("=" * 45)
 
 # Verificación de configuración requerida
 PAYPAL_REQUIRED_SETTINGS = [
@@ -216,12 +216,13 @@ for setting in PAYPAL_REQUIRED_SETTINGS:
         missing_settings.append(setting)
 
 if missing_settings and not DEBUG:
+    from django.core.exceptions import ImproperlyConfigured
     raise ImproperlyConfigured(
         f"Configuración PayPal incompleta: {', '.join(missing_settings)}"
     )
 
 # Timeout para requests PayPal
-PAYPAL_TIMEOUT = 15  # segundos
+PAYPAL_TIMEOUT = 30  # aumentado de 15 a 30 segundos
 
 # Configuración de retry
 PAYPAL_MAX_RETRIES = 3

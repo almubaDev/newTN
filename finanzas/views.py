@@ -918,10 +918,82 @@ def api_metricas_tiempo_real(request):
         items__isnull=False
     ).distinct().count()
     
-    return JsonResponse({
-        'ingresos_hoy': float(ingresos_hoy),
-        'ordenes_hoy': ordenes_hoy,
-        'productos_vendidos_hoy': productos_vendidos_hoy,
-        'carritos_activos_hora': carritos_activos_hora,
-        'timestamp': timezone.now().isoformat()
-    })
+# Endpoint para probar conexión desde debug
+@staff_member_required
+def test_paypal_connection(request):
+    """
+    Endpoint AJAX para probar conexión PayPal desde la vista de debug
+    """
+    if not settings.DEBUG:
+        return JsonResponse({'success': False, 'error': 'Only available in DEBUG mode'})
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST method required'})
+    
+    try:
+        # Usar el servicio PayPal para obtener token
+        token = PayPalService.get_access_token()
+        
+        if token:
+            return JsonResponse({
+                'success': True,
+                'message': 'Conexión PayPal exitosa',
+                'token_preview': token[:20] + '...' if len(token) > 20 else token,
+                'token_length': len(token)
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'error': 'No se pudo obtener token de PayPal'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error: {str(e)}'
+        })
+
+# Imports para las utilidades
+from .utils import verificar_configuracion_paypal, get_paypal_config_status
+
+@staff_member_required
+def debug_paypal(request):
+    """
+    Vista de debug para verificar configuración PayPal
+    Solo accesible para staff en modo DEBUG
+    """
+    from django.http import Http404
+    
+    if not settings.DEBUG:
+        raise Http404("Vista no disponible en producción")
+    
+    # Ejecutar verificación completa
+    configuracion_ok = verificar_configuracion_paypal()
+    
+    # Obtener estado de configuración
+    config_status = get_paypal_config_status()
+    
+    # Información adicional
+    debug_info = {
+        'configuracion_completa': configuracion_ok,
+        'config_status': config_status,
+        'settings_info': {
+            'PAYPAL_MODE': getattr(settings, 'PAYPAL_MODE', 'NOT SET'),
+            'PAYPAL_BASE_URL': getattr(settings, 'PAYPAL_BASE_URL', 'NOT SET'),
+            'DOMAIN_URL': getattr(settings, 'DOMAIN_URL', 'NOT SET'),
+            'PAYPAL_CLIENT_ID_LENGTH': len(settings.PAYPAL_CLIENT_ID) if settings.PAYPAL_CLIENT_ID else 0,
+            'PAYPAL_CLIENT_SECRET_LENGTH': len(settings.PAYPAL_CLIENT_SECRET) if settings.PAYPAL_CLIENT_SECRET else 0,
+        },
+        'urls_info': {
+            'current_domain': request.build_absolute_uri('/').rstrip('/'),
+            'expected_return_url': request.build_absolute_uri('/cart/pago-exitoso/TEST123/'),
+            'expected_cancel_url': request.build_absolute_uri('/cart/pago-cancelado/TEST123/'),
+        }
+    }
+    
+    context = {
+        'title': 'Debug PayPal Configuration',
+        'debug_info': debug_info,
+    }
+    
+    return render(request, 'finanzas/debug_paypal.html', context)
