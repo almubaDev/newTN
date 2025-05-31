@@ -1,0 +1,102 @@
+<!-- finanzas/templates/finanzas/checkout.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Tarotnaútica{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cosmic-900 via-cosmic-800 to-primary-900/20 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{% url 'finanzas:ver_carrito' %}" 
+                   class="text-cosmic-400 hover:text-cosmic-200 transition-colors mr-4">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-mystical font-bold text-primary-300">
+                    Resumen de Compra
+                </h1>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Items del carrito -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-primary-500/20">
+                <h2 class="text-xl font-mystical font-semibold text-primary-300 mb-6">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Productos a Comprar
+                </h2>
+                
+                <div class="space-y-4">
+                    {% for item in items %}
+                        <div class="flex items-center space-x-4 p-4 bg-cosmic-800/50 rounded-lg">
+                            {% if item.producto.mazo.imagen_reverso %}
+                                <img src="{{ item.producto.mazo.imagen_reverso.url }}" 
+                                     alt="{{ item.producto.mazo.nombre }}"
+                                     class="w-16 h-20 object-cover rounded border border-gold-500/30">
+                            {% else %}
+                                <div class="w-16 h-20 bg-cosmic-700 rounded border border-gold-500/30 flex items-center justify-center">
+                                    <i class="fas fa-cards-blank text-cosmic-400"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-primary-300">{{ item.producto.mazo.nombre }}</h3>
+                                <p class="text-sm text-mystic-400">{{ item.producto.mazo.set.nombre }}</p>
+                                <div class="flex items-center justify-between mt-2">
+                                    <span class="text-sm text-cosmic-400">Cantidad: {{ item.cantidad }}</span>
+                                    <span class="font-bold text-gold-400">${{ item.subtotal }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Resumen y pago -->
+            <div class="bg-cosmic-700/30 backdrop-blur-sm rounded-2xl p-6 border border-gold-500/20">
+                <h2 class="text-xl font-mystical font-semibold text-gold-300 mb-6">
+                    <i class="fas fa-receipt mr-2"></i>
+                    Resumen del Pedido
+                </h2>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex justify-between text-cosmic-300">
+                        <span>Subtotal:</span>
+                        <span>${{ carrito.subtotal }}</span>
+                    </div>
+                    <div class="border-t border-cosmic-600 pt-4">
+                        <div class="flex justify-between text-xl font-bold text-gold-400">
+                            <span>Total:</span>
+                            <span>${{ carrito.total }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón de pago -->
+                <div class="space-y-4">
+                    <button onclick="procesarPago()" 
+                            class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        Proceder al Pago - ${{ carrito.total }}
+                    </button>
+                    
+                    <a href="{% url 'finanzas:ver_carrito' %}" 
+                       class="w-full border-2 border-cosmic-500 text-cosmic-300 hover:bg-cosmic-500 hover:text-white py-3 px-6 rounded-lg font-semibold transition-all duration-300 inline-block text-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver al Carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function procesarPago() {
+    alert('Funcionalidad de pago - integrar con PayPal');
+    // Aquí iría la integración con PayPal
+}
+</script>
+{% endblock %}
