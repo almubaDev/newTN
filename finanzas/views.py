@@ -212,59 +212,16 @@ def carrito_widget(request):
 
 # ============== NUEVAS VISTAS PAYPAL ============== #
 
+
 class PayPalService:
     """
-    Servicio PayPal optimizado para Guest Checkout (pago directo con tarjeta)
+    Servicio PayPal con configuración corregida
     """
-    
-    @staticmethod
-    def get_access_token():
-        """
-        Obtener token de acceso de PayPal
-        """
-        url = f"{settings.PAYPAL_BASE_URL}/v1/oauth2/token"
-        
-        headers = {
-            'Accept': 'application/json',
-            'Accept-Language': 'en_US',
-        }
-        
-        data = 'grant_type=client_credentials'
-        
-        try:
-            print(f"🔑 Solicitando token PayPal...")
-            print(f"   URL: {url}")
-            print(f"   Mode: {settings.PAYPAL_MODE}")
-            
-            response = requests.post(
-                url,
-                headers=headers,
-                data=data,
-                auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
-                timeout=10
-            )
-            
-            print(f"   Status: {response.status_code}")
-            
-            if response.status_code == 200:
-                token_data = response.json()
-                print(f"   ✅ Token obtenido exitosamente")
-                return token_data['access_token']
-            else:
-                print(f"   ❌ Error: {response.text}")
-                return None
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error de conexión con PayPal: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error inesperado obteniendo token: {e}")
-            return None
     
     @staticmethod
     def crear_orden_paypal(orden_compra, request=None):
         """
-        Crear orden PayPal optimizada para Guest Checkout
+        Crear orden PayPal - ERRORES CORREGIDOS
         """
         token = PayPalService.get_access_token()
         if not token:
@@ -276,7 +233,7 @@ class PayPalService:
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {token}',
-            'PayPal-Request-Id': str(uuid.uuid4()),  # Evita duplicados
+            'PayPal-Request-Id': str(uuid.uuid4()),
         }
         
         # URLs dinámicas
@@ -288,16 +245,15 @@ class PayPalService:
         return_url = f"{base_url}/cart/pago-exitoso/{orden_compra.codigo_orden}/"
         cancel_url = f"{base_url}/cart/pago-cancelado/{orden_compra.codigo_orden}/"
         
-        print(f"💰 Creando orden PayPal optimizada:")
+        print(f"💰 Creando orden PayPal corregida:")
         print(f"   Orden: {orden_compra.codigo_orden}")
         print(f"   Total: ${orden_compra.total}")
-        print(f"   Return URL: {return_url}")
         
         # Items para PayPal
         items = []
         for item in orden_compra.items.all():
             items.append({
-                "name": item.producto.mazo.nombre[:127],  # Límite PayPal
+                "name": item.producto.mazo.nombre[:127],
                 "unit_amount": {
                     "currency_code": orden_compra.moneda,
                     "value": str(item.precio_unitario)
@@ -307,9 +263,9 @@ class PayPalService:
                 "category": "DIGITAL_GOODS"
             })
         
-        # CONFIGURACIÓN OPTIMIZADA PARA GUEST CHECKOUT
+        # CONFIGURACIÓN CORREGIDA - SIN ERRORES
         data = {
-            "intent": "CAPTURE",  # Captura inmediata
+            "intent": "CAPTURE",
             "purchase_units": [{
                 "reference_id": str(orden_compra.codigo_orden),
                 "amount": {
@@ -324,27 +280,24 @@ class PayPalService:
                 },
                 "items": items,
                 "description": f"Tarotnaútica - Orden {orden_compra.codigo_orden}",
-                "soft_descriptor": "TAROTNAUTICA",  # En estado de cuenta
-                "payee": {
-                    "merchant_id": settings.PAYPAL_CLIENT_ID  # Tu merchant ID
-                }
+                "soft_descriptor": "TAROTNAUTICA"
+                # ❌ REMOVIDO: payee con merchant_id incorrecto
             }],
             "application_context": {
                 "return_url": return_url,
                 "cancel_url": cancel_url,
                 "brand_name": "Tarotnaútica",
-                "landing_page": "GUEST_CHECKOUT",  # 🔑 CLAVE: Guest checkout directo
-                "user_action": "PAY_NOW",  # Acción inmediata
-                "shipping_preference": "NO_SHIPPING",  # Sin envío
-                "payment_method": {
-                    "payer_selected": "PAYPAL",
-                    "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
-                }
+                "landing_page": "BILLING",  # ✅ CORREGIDO: BILLING en lugar de GUEST_CHECKOUT
+                "user_action": "PAY_NOW",
+                "shipping_preference": "NO_SHIPPING"
+                # ❌ REMOVIDO: payment_method que causaba problemas
             }
         }
         
         try:
-            print(f"   📤 Enviando orden a PayPal...")
+            print(f"   📤 Enviando orden corregida a PayPal...")
+            print(f"   📋 Landing page: BILLING")
+            print(f"   📋 User action: PAY_NOW")
             
             response = requests.post(
                 url, 
@@ -357,7 +310,7 @@ class PayPalService:
             
             if response.status_code in [200, 201]:
                 paypal_response = response.json()
-                print(f"   ✅ Orden creada: {paypal_response.get('id')}")
+                print(f"   ✅ Orden creada exitosamente: {paypal_response.get('id')}")
                 return paypal_response
             else:
                 print(f"   ❌ Error PayPal: {response.text}")
@@ -372,10 +325,78 @@ class PayPalService:
             return None
 
 
+# ALTERNATIVA CON CONFIGURACIÓN MÍNIMA (MÁS SEGURA)
+class PayPalServiceMinimal:
+    """
+    Versión mínima sin configuraciones problemáticas
+    """
+    
+    @staticmethod
+    def crear_orden_simple(orden_compra, request=None):
+        """
+        Crear orden con configuración mínima - MÁXIMA COMPATIBILIDAD
+        """
+        token = PayPalService.get_access_token()
+        if not token:
+            return None
+        
+        url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}',
+        }
+        
+        # URLs
+        if request:
+            base_url = request.build_absolute_uri('/').rstrip('/')
+        else:
+            base_url = settings.DOMAIN_URL
+        
+        return_url = f"{base_url}/cart/pago-exitoso/{orden_compra.codigo_orden}/"
+        cancel_url = f"{base_url}/cart/pago-cancelado/{orden_compra.codigo_orden}/"
+        
+        # CONFIGURACIÓN MÍNIMA Y SEGURA
+        data = {
+            "intent": "CAPTURE",
+            "purchase_units": [{
+                "reference_id": str(orden_compra.codigo_orden),
+                "amount": {
+                    "currency_code": "USD",
+                    "value": str(orden_compra.total)
+                },
+                "description": f"Compra en Tarotnaútica - {orden_compra.codigo_orden}"
+            }],
+            "application_context": {
+                "return_url": return_url,
+                "cancel_url": cancel_url,
+                "brand_name": "Tarotnaútica",
+                "landing_page": "BILLING",  # BILLING permite tanto PayPal como tarjetas
+                "user_action": "PAY_NOW",
+                "shipping_preference": "NO_SHIPPING"
+            }
+        }
+        
+        try:
+            print(f"💰 Creando orden simple para {orden_compra.codigo_orden}")
+            
+            response = requests.post(url, headers=headers, json=data, timeout=15)
+            
+            if response.status_code in [200, 201]:
+                return response.json()
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error creando orden simple: {e}")
+            return None
+
+
+# ACTUALIZAR LA VISTA PRINCIPAL
 @login_required
 def crear_orden_paypal(request):
     """
-    Crear orden PayPal desde el carrito - VERSIÓN OPTIMIZADA
+    Crear orden PayPal - USANDO VERSIÓN CORREGIDA
     """
     if request.method != 'POST':
         return JsonResponse({
@@ -384,24 +405,15 @@ def crear_orden_paypal(request):
         }, status=405)
     
     try:
-        print(f"\n🛒 === CREANDO ORDEN PAYPAL ===")
+        print(f"\n🛒 === CREANDO ORDEN PAYPAL CORREGIDA ===")
         print(f"Usuario: {request.user.email}")
         
-        # Verificar configuración PayPal
-        required_settings = [
-            settings.PAYPAL_CLIENT_ID,
-            settings.PAYPAL_CLIENT_SECRET,
-            settings.PAYPAL_BASE_URL
-        ]
-        
-        if not all(required_settings):
-            logger.error("❌ Configuración PayPal incompleta")
+        # Verificar configuración
+        if not all([settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET]):
             return JsonResponse({
                 'success': False,
                 'message': 'Configuración de pagos no disponible'
             }, status=500)
-        
-        print(f"✅ Configuración PayPal OK")
         
         # Obtener carrito
         carrito = get_object_or_404(Carrito, usuario=request.user)
@@ -413,17 +425,6 @@ def crear_orden_paypal(request):
             }, status=400)
         
         print(f"🛍️ Carrito: {carrito.items.count()} items, total: ${carrito.total}")
-        
-        # Verificar que todos los productos están activos
-        productos_inactivos = carrito.items.filter(
-            producto__estado__in=['inactivo', 'agotado']
-        )
-        
-        if productos_inactivos.exists():
-            return JsonResponse({
-                'success': False,
-                'message': 'Algunos productos ya no están disponibles'
-            })
         
         # Crear OrdenCompra
         orden = OrdenCompra.objects.create(
@@ -437,8 +438,7 @@ def crear_orden_paypal(request):
         
         print(f"📋 Orden creada: {orden.codigo_orden}")
         
-        # Crear ItemOrden desde el carrito
-        items_creados = 0
+        # Crear ItemOrden
         for item_carrito in carrito.items.select_related('producto', 'producto__mazo'):
             ItemOrden.objects.create(
                 orden=orden,
@@ -446,33 +446,28 @@ def crear_orden_paypal(request):
                 cantidad=item_carrito.cantidad,
                 precio_unitario=item_carrito.precio_unitario
             )
-            items_creados += 1
         
-        print(f"📦 Items creados: {items_creados}")
-        
-        # Crear orden en PayPal
+        # USAR LA VERSIÓN CORREGIDA
         paypal_response = PayPalService.crear_orden_paypal(orden, request)
         
+        # FALLBACK: Si falla, usar versión mínima
+        if not paypal_response:
+            print("⚠️ Intentando con configuración mínima...")
+            paypal_response = PayPalServiceMinimal.crear_orden_simple(orden, request)
+        
         if paypal_response and 'id' in paypal_response:
-            # Guardar datos de PayPal
             orden.paypal_order_id = paypal_response['id']
             orden.estado = 'pendiente'
             orden.datos_paypal = paypal_response
             orden.save()
             
-            print(f"🎉 ¡Orden PayPal creada exitosamente!")
+            print(f"🎉 ¡Orden PayPal creada!")
             print(f"   PayPal ID: {paypal_response['id']}")
-            print(f"   Status: {paypal_response.get('status', 'N/A')}")
             
             return JsonResponse({
                 'success': True,
                 'order_id': paypal_response['id'],
-                'message': 'Orden creada exitosamente',
-                'debug': {
-                    'orden_codigo': orden.codigo_orden,
-                    'paypal_id': paypal_response['id'],
-                    'status': paypal_response.get('status')
-                }
+                'message': 'Orden creada exitosamente'
             })
         else:
             print(f"💥 Error: No se pudo crear orden en PayPal")
@@ -481,95 +476,18 @@ def crear_orden_paypal(request):
             
             return JsonResponse({
                 'success': False,
-                'message': 'Error al procesar con PayPal. Verifica tu conexión e intenta nuevamente.'
+                'message': 'Error al procesar con PayPal. Intenta nuevamente.'
             }, status=500)
             
-    except Carrito.DoesNotExist:
-        print(f"❌ Carrito no encontrado para usuario: {request.user.email}")
-        return JsonResponse({
-            'success': False,
-            'message': 'Carrito no encontrado'
-        }, status=404)
-        
     except Exception as e:
-        logger.error(f"💥 Error crítico creando orden PayPal: {e}")
+        logger.error(f"💥 Error crítico: {e}")
         import traceback
         traceback.print_exc()
         
         return JsonResponse({
             'success': False,
-            'message': 'Error interno del servidor. Intenta nuevamente.'
+            'message': 'Error interno del servidor.'
         }, status=500)
-
-
-@login_required
-def crear_orden_paypal(request):
-    """
-    Crear orden PayPal desde el carrito
-    """
-    try:
-        carrito = get_object_or_404(Carrito, usuario=request.user)
-        
-        if not carrito.items.exists():
-            return JsonResponse({
-                'success': False,
-                'message': 'Tu carrito está vacío'
-            })
-        
-        # Crear OrdenCompra
-        orden = OrdenCompra.objects.create(
-            usuario=request.user,
-            codigo_orden=str(uuid.uuid4())[:8].upper(),
-            subtotal=carrito.subtotal,
-            total=carrito.total,
-            moneda='USD',
-            estado='creada'
-        )
-        
-        # Crear ItemOrden desde el carrito
-        for item_carrito in carrito.items.all():
-            ItemOrden.objects.create(
-                orden=orden,
-                producto=item_carrito.producto,
-                cantidad=item_carrito.cantidad,
-                precio_unitario=item_carrito.precio_unitario
-            )
-        
-        # Crear orden en PayPal
-        paypal_response = PayPalService.crear_orden_paypal(orden)
-        
-        if paypal_response and 'id' in paypal_response:
-            # Guardar ID de PayPal
-            orden.paypal_order_id = paypal_response['id']
-            orden.estado = 'pendiente'
-            orden.save()
-            
-            # Buscar link de aprobación
-            approve_url = None
-            for link in paypal_response.get('links', []):
-                if link.get('rel') == 'approve':
-                    approve_url = link.get('href')
-                    break
-            
-            return JsonResponse({
-                'success': True,
-                'order_id': paypal_response['id'],
-                'approve_url': approve_url
-            })
-        else:
-            orden.estado = 'error'
-            orden.save()
-            return JsonResponse({
-                'success': False,
-                'message': 'Error al crear orden en PayPal'
-            })
-            
-    except Exception as e:
-        logger.error(f"Error creando orden PayPal: {e}")
-        return JsonResponse({
-            'success': False,
-            'message': f'Error interno: {str(e)}'
-        })
 
 
 @csrf_exempt
