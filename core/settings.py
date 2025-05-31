@@ -169,7 +169,7 @@ PILLOW_DISABLE_PROGRESSIVE = True
 
 
 
-# ============== CONFIGURACIÓN PAYPAL ============== #
+# ============== CONFIGURACIÓN PAYPAL OPTIMIZADA ============== #
 PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = config('PAYPAL_MODE', default='sandbox')  # 'sandbox' o 'live'
@@ -178,8 +178,51 @@ PAYPAL_WEBHOOK_ID = config('PAYPAL_WEBHOOK_ID', default='')
 # URLs de PayPal
 if PAYPAL_MODE == 'live':
     PAYPAL_BASE_URL = 'https://api.paypal.com'
+    PAYPAL_WEB_URL = 'https://www.paypal.com'
 else:
     PAYPAL_BASE_URL = 'https://api.sandbox.paypal.com'
+    PAYPAL_WEB_URL = 'https://www.sandbox.paypal.com'
 
-# Configuración adicional para webhooks
-PAYPAL_WEBHOOK_URL = f"{config('DOMAIN_URL', default='https://tarotnautica.store')}/cart/webhook/paypal/"
+# Configuración de dominio
+DOMAIN_URL = config('DOMAIN_URL', default='http://127.0.0.1:8000')
+PAYPAL_WEBHOOK_URL = f"{DOMAIN_URL}/cart/webhook/paypal/"
+
+# Configuración adicional para Guest Checkout
+PAYPAL_GUEST_CHECKOUT = True
+PAYPAL_BRAND_NAME = "Tarotnaútica"
+PAYPAL_LOCALE = "es_ES"
+
+# Logging en desarrollo
+if DEBUG:
+    print(f"\n🔧 === CONFIGURACIÓN PAYPAL ===")
+    print(f"   Mode: {PAYPAL_MODE}")
+    print(f"   Base URL: {PAYPAL_BASE_URL}")
+    print(f"   Client ID: {PAYPAL_CLIENT_ID[:15] if PAYPAL_CLIENT_ID else 'NOT SET'}...")
+    print(f"   Secret: {'SET' if PAYPAL_CLIENT_SECRET else 'NOT SET'}")
+    print(f"   Domain: {DOMAIN_URL}")
+    print(f"   Webhook URL: {PAYPAL_WEBHOOK_URL}")
+    print(f"   Guest Checkout: {PAYPAL_GUEST_CHECKOUT}")
+    print("=" * 35)
+
+# Verificación de configuración requerida
+PAYPAL_REQUIRED_SETTINGS = [
+    'PAYPAL_CLIENT_ID',
+    'PAYPAL_CLIENT_SECRET',
+]
+
+missing_settings = []
+for setting in PAYPAL_REQUIRED_SETTINGS:
+    if not globals().get(setting):
+        missing_settings.append(setting)
+
+if missing_settings and not DEBUG:
+    raise ImproperlyConfigured(
+        f"Configuración PayPal incompleta: {', '.join(missing_settings)}"
+    )
+
+# Timeout para requests PayPal
+PAYPAL_TIMEOUT = 15  # segundos
+
+# Configuración de retry
+PAYPAL_MAX_RETRIES = 3
+PAYPAL_RETRY_DELAY = 1  # segundos

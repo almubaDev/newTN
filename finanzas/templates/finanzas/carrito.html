@@ -1,4 +1,4 @@
-<!-- finanzas/templates/finanzas/carrito.html - ACTUALIZADO SIN CHECKOUT -->
+<!-- finanzas/templates/finanzas/carrito.html - TEMPLATE COMPLETO ACTUALIZADO -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -139,19 +139,33 @@
                         </div>
 
                         <div class="space-y-3">
+                            <!-- Mensaje informativo sobre el pago -->
+                            <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-info-circle text-blue-400 mr-2 mt-0.5"></i>
+                                    <div class="text-xs text-blue-200">
+                                        <p class="font-semibold mb-1">Pago seguro con PayPal</p>
+                                        <p>Puedes pagar con tu cuenta PayPal o directamente con tarjeta de crédito/débito sin necesidad de crear cuenta.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Botón PayPal -->
                             <div id="paypal-button-container" class="w-full"></div>
                             
                             <!-- Mensaje de carga -->
                             <div id="paypal-loading" class="w-full bg-gradient-to-r from-blue-500 to-primary-500 text-white py-3 px-6 rounded-lg font-bold text-center">
                                 <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Cargando PayPal...
+                                Cargando opciones de pago...
                             </div>
                             
                             <!-- Mensaje si PayPal no está disponible -->
                             <div id="paypal-error" class="hidden w-full bg-red-500/20 border border-red-500/50 text-red-300 py-3 px-6 rounded-lg text-center">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
-                                PayPal no disponible temporalmente
+                                <span id="paypal-error-text">Pagos temporalmente no disponibles</span>
+                                <button onclick="location.reload()" class="block mt-2 text-xs text-red-200 hover:text-red-100">
+                                    <i class="fas fa-refresh mr-1"></i>Intentar nuevamente
+                                </button>
                             </div>
                             
                             <a href="{% url 'tienda:home' %}" 
@@ -242,8 +256,8 @@
 </div>
 
 {% block extra_js %}
-<!-- PayPal SDK -->
-<script src="https://www.paypal.com/sdk/js?client-id={{ PAYPAL_CLIENT_ID }}&currency=USD&intent=capture"></script>
+<!-- PayPal SDK optimizado para Guest Checkout -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ PAYPAL_CLIENT_ID }}&currency=USD&intent=capture&components=buttons"></script>
 
 <script>
 // Variables globales para modales
@@ -269,7 +283,6 @@ function getCookie(name) {
 function actualizarCantidad(itemId, nuevaCantidad) {
     if (nuevaCantidad < 1) return;
     
-    // Deshabilitar botones temporalmente
     const btnMenos = document.querySelector(`button[onclick*="actualizarCantidad(${itemId}, ${nuevaCantidad - 1})"]`);
     const btnMas = document.querySelector(`button[onclick*="actualizarCantidad(${itemId}, ${nuevaCantidad + 1})"]`);
     
@@ -289,26 +302,15 @@ function actualizarCantidad(itemId, nuevaCantidad) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Actualizar cantidad
             document.querySelector(`.cantidad-${itemId}`).textContent = nuevaCantidad;
-            
-            // Actualizar subtotal del item
             document.querySelector(`.subtotal-${itemId}`).textContent = `$${data.subtotal_item}`;
-            
-            // Actualizar totales
             document.getElementById('total-items').textContent = data.total_items;
             document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
             document.getElementById('total').textContent = `$${data.total_carrito}`;
             
-            // Actualizar badge del navbar
             actualizarBadgeCarrito();
-            
-            // Mostrar mensaje de éxito
             mostrarMensaje(data.message, 'success');
-            
-            // Actualizar onclick de los botones
             actualizarBotonesControles(itemId, nuevaCantidad);
-            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -318,25 +320,19 @@ function actualizarCantidad(itemId, nuevaCantidad) {
         mostrarMensaje('Error al actualizar cantidad', 'error');
     })
     .finally(() => {
-        // Rehabilitar botones
         if (btnMenos) btnMenos.disabled = false;
         if (btnMas) btnMas.disabled = false;
     });
 }
 
-// Actualizar botones de control después de cambiar cantidad
 function actualizarBotonesControles(itemId, nuevaCantidad) {
     const container = document.getElementById(`item-${itemId}`);
     const btnMenos = container.querySelector('button[onclick*="actualizarCantidad"]');
     const btnMas = container.querySelectorAll('button[onclick*="actualizarCantidad"]')[1];
     
-    // Actualizar onclick del botón menos
     btnMenos.setAttribute('onclick', `actualizarCantidad(${itemId}, ${nuevaCantidad - 1})`);
-    
-    // Actualizar onclick del botón más
     btnMas.setAttribute('onclick', `actualizarCantidad(${itemId}, ${nuevaCantidad + 1})`);
     
-    // Actualizar estado del botón menos
     if (nuevaCantidad <= 1) {
         btnMenos.disabled = true;
         btnMenos.classList.add('opacity-50', 'cursor-not-allowed');
@@ -353,13 +349,11 @@ function mostrarModalEliminar(itemId, nombreProducto) {
     document.getElementById('modalEliminarItem').classList.remove('hidden');
 }
 
-// Cerrar modal eliminar
 function cerrarModalEliminar() {
     itemIdParaEliminar = null;
     document.getElementById('modalEliminarItem').classList.add('hidden');
 }
 
-// Confirmar eliminación
 function confirmarEliminar() {
     if (!itemIdParaEliminar) return;
     
@@ -377,7 +371,6 @@ function confirmarEliminar() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remover el elemento del DOM con animación
             const item = document.getElementById(`item-${itemIdParaEliminar}`);
             item.style.transition = 'all 0.3s ease';
             item.style.opacity = '0';
@@ -387,25 +380,20 @@ function confirmarEliminar() {
                 item.remove();
             }, 300);
             
-            // Actualizar totales
             document.getElementById('total-items').textContent = data.total_items;
             document.getElementById('subtotal').textContent = `$${data.total_carrito}`;
             document.getElementById('total').textContent = `$${data.total_carrito}`;
             
-            // Actualizar badge del navbar
             actualizarBadgeCarrito();
             
-            // Si no quedan items, recargar la página
             if (data.total_items === 0) {
                 setTimeout(() => {
                     location.reload();
                 }, 500);
             }
             
-            // Cerrar modal
             cerrarModalEliminar();
             mostrarMensaje(data.message, 'success');
-            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -425,12 +413,10 @@ function mostrarModalVaciarCarrito() {
     document.getElementById('modalVaciarCarrito').classList.remove('hidden');
 }
 
-// Cerrar modal vaciar carrito
 function cerrarModalVaciarCarrito() {
     document.getElementById('modalVaciarCarrito').classList.add('hidden');
 }
 
-// Confirmar vaciar carrito
 function confirmarVaciarCarrito() {
     const btn = document.getElementById('btnConfirmarVaciar');
     const originalText = btn.textContent;
@@ -447,14 +433,12 @@ function confirmarVaciarCarrito() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Cerrar modal y recargar
             cerrarModalVaciarCarrito();
             mostrarMensaje(data.message, 'success');
             
             setTimeout(() => {
                 location.reload();
             }, 1000);
-            
         } else {
             mostrarMensaje(data.message, 'error');
         }
@@ -498,13 +482,19 @@ function actualizarBadgeCarrito() {
 
 // Mostrar mensajes
 function mostrarMensaje(mensaje, tipo) {
+    const colores = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'warning': 'bg-yellow-500',
+        'info': 'bg-blue-500'
+    };
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 ${
-        tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+        colores[tipo] || colores['info']
     } text-white font-semibold transform transition-all duration-300`;
     messageDiv.textContent = mensaje;
     
-    // Añadir al DOM con animación
     messageDiv.style.transform = 'translateX(100%)';
     document.body.appendChild(messageDiv);
     
@@ -512,7 +502,7 @@ function mostrarMensaje(mensaje, tipo) {
         messageDiv.style.transform = 'translateX(0)';
     }, 100);
     
-    // Remover después de 3 segundos
+    const timeout = tipo === 'error' ? 5000 : 3000;
     setTimeout(() => {
         messageDiv.style.transform = 'translateX(100%)';
         setTimeout(() => {
@@ -520,7 +510,7 @@ function mostrarMensaje(mensaje, tipo) {
                 messageDiv.remove();
             }
         }, 300);
-    }, 3000);
+    }, timeout);
 }
 
 // Cerrar modales con Escape
@@ -531,25 +521,25 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Carrito cargado correctamente');
-    
-    // Inicializar PayPal solo si hay items en el carrito
-    {% if items %}
-        inicializarPayPal();
-    {% endif %}
-});
-
-// ============== INTEGRACIÓN PAYPAL ============== //
+// ============== INTEGRACIÓN PAYPAL OPTIMIZADA ============== //
 
 function inicializarPayPal() {
-    // Verificar que PayPal esté disponible
+    console.log('🔧 Inicializando PayPal optimizado...');
+    
     if (typeof paypal === 'undefined') {
-        console.error('PayPal SDK no cargado');
-        mostrarErrorPayPal();
+        console.error('❌ PayPal SDK no cargado');
+        mostrarErrorPayPal('SDK no disponible');
         return;
     }
+    
+    const clientId = '{{ PAYPAL_CLIENT_ID }}';
+    if (!clientId || clientId === 'None' || clientId === '') {
+        console.error('❌ PayPal Client ID no configurado');
+        mostrarErrorPayPal('Configuración incompleta');
+        return;
+    }
+    
+    console.log('✅ PayPal SDK listo, Client ID:', clientId.substring(0, 10) + '...');
     
     paypal.Buttons({
         style: {
@@ -557,14 +547,16 @@ function inicializarPayPal() {
             color: 'blue',
             shape: 'rect',
             label: 'paypal',
-            height: 50
+            height: 50,
+            tagline: false
         },
         
         createOrder: function(data, actions) {
-            // Ocultar loading
-            document.getElementById('paypal-loading').style.display = 'none';
+            console.log('💰 Creando orden PayPal...');
             
-            // Llamar a nuestro backend para crear la orden
+            document.getElementById('paypal-loading').style.display = 'none';
+            mostrarMensaje('Creando orden de pago...', 'info');
+            
             return fetch('/cart/paypal/crear-orden/', {
                 method: 'POST',
                 headers: {
@@ -572,62 +564,108 @@ function inicializarPayPal() {
                     'X-CSRFToken': getCookie('csrftoken'),
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('📡 Respuesta del servidor:', response.status);
+                return response.json();
+            })
             .then(data => {
-                if (data.success) {
+                console.log('📦 Datos recibidos:', data);
+                
+                if (data.success && data.order_id) {
+                    console.log('✅ Orden creada:', data.order_id);
                     return data.order_id;
                 } else {
-                    throw new Error(data.message || 'Error creando orden');
+                    console.error('❌ Error en respuesta:', data.message);
+                    throw new Error(data.message || 'Error desconocido creando orden');
                 }
             })
             .catch(error => {
-                console.error('Error creando orden:', error);
+                console.error('💥 Error creando orden:', error);
                 mostrarMensaje('Error al procesar el pago: ' + error.message, 'error');
+                mostrarErrorPayPal('Error de conexión');
                 throw error;
             });
         },
         
         onApprove: function(data, actions) {
-            // Mostrar mensaje de procesamiento
-            mostrarMensaje('Procesando pago...', 'success');
+            console.log('✅ Pago aprobado:', data.orderID);
+            mostrarMensaje('Pago aprobado, procesando...', 'success');
             
-            // PayPal manejará la captura automáticamente
-            // El webhook se encargará del resto
             return actions.order.capture().then(function(details) {
-                // Pago exitoso - redirigir a página de confirmación
+                console.log('💳 Captura completada:', details);
                 mostrarMensaje('¡Pago completado exitosamente!', 'success');
                 
-                // Esperar un momento y redirigir
                 setTimeout(() => {
                     window.location.href = `/cart/pago-exitoso/${data.orderID}/`;
                 }, 2000);
+                
+                return details;
+            }).catch(function(error) {
+                console.error('💥 Error en captura:', error);
+                mostrarMensaje('Error finalizando el pago', 'error');
+                throw error;
             });
         },
         
         onError: function(err) {
-            console.error('Error de PayPal:', err);
+            console.error('💥 Error de PayPal:', err);
             mostrarMensaje('Error en el proceso de pago. Intenta nuevamente.', 'error');
-            mostrarErrorPayPal();
+            mostrarErrorPayPal('Error de procesamiento');
         },
         
         onCancel: function(data) {
-            mostrarMensaje('Pago cancelado', 'error');
+            console.log('🚫 Pago cancelado:', data.orderID);
+            mostrarMensaje('Pago cancelado por el usuario', 'warning');
+            
+            if (data.orderID) {
+                setTimeout(() => {
+                    window.location.href = `/cart/pago-cancelado/${data.orderID}/`;
+                }, 1000);
+            }
         }
         
     }).render('#paypal-button-container').then(() => {
-        // PayPal cargado exitosamente
         document.getElementById('paypal-loading').style.display = 'none';
-        console.log('PayPal inicializado correctamente');
+        console.log('🎉 PayPal inicializado correctamente');
+        
     }).catch((error) => {
-        console.error('Error inicializando PayPal:', error);
-        mostrarErrorPayPal();
+        console.error('💥 Error inicializando PayPal:', error);
+        mostrarErrorPayPal('Error de inicialización');
     });
 }
 
-function mostrarErrorPayPal() {
+function mostrarErrorPayPal(mensaje = 'Error temporal') {
+    console.log('⚠️ Mostrando error PayPal:', mensaje);
+    
     document.getElementById('paypal-loading').style.display = 'none';
     document.getElementById('paypal-error').classList.remove('hidden');
+    
+    const errorElement = document.getElementById('paypal-error-text');
+    if (errorElement) {
+        errorElement.textContent = mensaje;
+    }
 }
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Carrito cargado correctamente');
+    
+    {% if items %}
+        setTimeout(() => {
+            inicializarPayPal();
+        }, 500);
+    {% endif %}
+    
+    // Actualizar badge del carrito al cargar
+    actualizarBadgeCarrito();
+});
+
+// Debug: verificar carga del SDK
+window.addEventListener('load', function() {
+    console.log('🌐 Página completamente cargada');
+    console.log('PayPal SDK disponible:', typeof paypal !== 'undefined');
+    console.log('Client ID disponible:', '{{ PAYPAL_CLIENT_ID }}' !== 'None');
+});
 </script>
 {% endblock %}
 {% endblock %}
