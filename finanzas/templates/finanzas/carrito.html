@@ -1,4 +1,4 @@
-<!-- finanzas/templates/finanzas/carrito.html -->
+<!-- finanzas/templates/finanzas/carrito.html - ACTUALIZADO SIN CHECKOUT -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -148,13 +148,10 @@
                                 Cargando PayPal...
                             </div>
                             
-                            <!-- Botón de respaldo si PayPal falla -->
-                            <div id="paypal-fallback" class="hidden">
-                                <button onclick="procesarPagoManual()" 
-                                        class="w-full bg-gradient-to-r from-green-500 to-primary-500 hover:from-green-600 hover:to-primary-600 text-white py-3 px-6 rounded-lg font-bold text-center transition-all duration-300 transform hover:scale-105">
-                                    <i class="fas fa-credit-card mr-2"></i>
-                                    Proceder al Pago
-                                </button>
+                            <!-- Mensaje si PayPal no está disponible -->
+                            <div id="paypal-error" class="hidden w-full bg-red-500/20 border border-red-500/50 text-red-300 py-3 px-6 rounded-lg text-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                PayPal no disponible temporalmente
                             </div>
                             
                             <a href="{% url 'tienda:home' %}" 
@@ -246,7 +243,7 @@
 
 {% block extra_js %}
 <!-- PayPal SDK -->
-<script src="https://www.paypal.com/sdk/js?client-id={{ settings.PAYPAL_CLIENT_ID }}&currency=USD&intent=capture"></script>
+<script src="https://www.paypal.com/sdk/js?client-id={{ PAYPAL_CLIENT_ID }}&currency=USD&intent=capture"></script>
 
 <script>
 // Variables globales para modales
@@ -550,7 +547,7 @@ function inicializarPayPal() {
     // Verificar que PayPal esté disponible
     if (typeof paypal === 'undefined') {
         console.error('PayPal SDK no cargado');
-        mostrarFallback();
+        mostrarErrorPayPal();
         return;
     }
     
@@ -610,6 +607,7 @@ function inicializarPayPal() {
         onError: function(err) {
             console.error('Error de PayPal:', err);
             mostrarMensaje('Error en el proceso de pago. Intenta nuevamente.', 'error');
+            mostrarErrorPayPal();
         },
         
         onCancel: function(data) {
@@ -622,21 +620,14 @@ function inicializarPayPal() {
         console.log('PayPal inicializado correctamente');
     }).catch((error) => {
         console.error('Error inicializando PayPal:', error);
-        mostrarFallback();
+        mostrarErrorPayPal();
     });
 }
 
-function mostrarFallback() {
+function mostrarErrorPayPal() {
     document.getElementById('paypal-loading').style.display = 'none';
-    document.getElementById('paypal-fallback').classList.remove('hidden');
+    document.getElementById('paypal-error').classList.remove('hidden');
 }
-
-function procesarPagoManual() {
-    // Función de respaldo si PayPal falla
-    window.location.href = '{% url "finanzas:checkout" %}';
-}
-
-// ============== FUNCIONES EXISTENTES DEL CARRITO ============== //
 </script>
 {% endblock %}
 {% endblock %}
