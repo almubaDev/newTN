@@ -4,6 +4,7 @@ from PIL import Image
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import sys
+import json
 
 def upload_to_cartas(instance, filename):
     """Función personalizada para mantener el nombre original y preservar formato"""
@@ -338,4 +339,128 @@ class Carta(models.Model):
                 )
         
         # Llamar al save original
+        super().save(*args, **kwargs)
+        
+
+def upload_to_tiradas(instance, filename):
+    """Función personalizada para imágenes de tiradas"""
+    return f'tiradas/{filename}'
+
+class Tirada(models.Model):
+    """
+    Modelo para tiradas de cartas con posiciones dinámicas
+    """
+    nombre = models.CharField(
+        max_length=100, 
+        verbose_name="Nombre de la Tirada",
+        help_text="Nombre descriptivo de la tirada (ej: Tirada del Tiempo)"
+    )
+    
+    mazo = models.ForeignKey(
+        Mazo,
+        on_delete=models.CASCADE,
+        related_name='tiradas',
+        verbose_name="Mazo asociado",
+        help_text="Mazo del cual se tomarán las cartas para esta tirada"
+    )
+    
+    imagen_mesa = models.ImageField(
+        upload_to=upload_to_tiradas,
+        verbose_name="Imagen de la Mesa",
+        help_text="Imagen que muestra las posiciones de las cartas en la mesa"
+    )
+    
+    posiciones = models.JSONField(
+        verbose_name="Posiciones de las Cartas",
+        help_text="Configuración JSON con las posiciones y sus significados",
+        default=dict
+    )
+    
+    permite_invertidas = models.BooleanField(
+        default=True,
+        verbose_name="Permite Cartas Invertidas",
+        help_text="Si está activado, algunas cartas podrán aparecer invertidas aleatoriamente"
+    )
+    
+    descripcion = models.TextField(
+        blank=True,
+        verbose_name="Descripción",
+        help_text="Descripción general de la tirada y su propósito"
+    )
+    
+    activa = models.BooleanField(
+        default=True,
+        verbose_name="Tirada Activa",
+        help_text="Si la tirada está disponible para usar"
+    )
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Tirada"
+        verbose_name_plural = "Tiradas"
+        ordering = ['nombre']
+    
+    def __str__(self):
+        return f"{self.nombre} - {self.mazo.nombre}"
+    
+    def cantidad_cartas(self):
+        """Retorna la cantidad de cartas en esta tirada"""
+        return len(self.posiciones) if self.posiciones else 0
+    
+    def get_posiciones_ordenadas(self):
+        """Retorna las posiciones ordenadas por su número"""
+        if not self.posiciones:
+            return []
+        
+        try:
+            # Convertir claves a enteros y ordenar
+            return sorted(
+                [(int(k), v) for k, v in self.posiciones.items()],
+                key=lambda x: x[0]
+            )
+        except (ValueError, AttributeError):
+            return []
+    
+    def validar_posiciones(self):
+        """Valida que el JSON de posiciones tenga la estructura correcta"""
+        if not self.posiciones:
+            return False, "No hay posiciones definidas"
+        
+        try:
+            for posicion, datos in self.posiciones.items():
+                # Verificar que la clave sea numérica
+                int(posicion)
+                
+                # Verificar campos requeridos
+                if not isinstance(datos, dict):
+                    return False, f"La posición {posicion} debe ser un objeto"
+                
+                if 'nombre' not in datos:
+                    return False, f"La posición {posicion} debe tener 'nombre'"
+                
+                if 'descripcion' not in datos:
+                    return False, f"La posición {posicion} debe tener 'descripcion'"
+                    
+            return True, "Posiciones válidas"
+            
+        except (ValueError, TypeError) as e:
+            return False, f"Error en estructura JSON: {str(e)}"
+    
+    def get_posicion_info(self, numero_posicion):
+        """Obtiene información de una posición específica"""
+        if not self.posiciones:
+            return None
+            
+        posicion_str = str(numero_posicion)
+        return self.posiciones.get(posicion_str, None)
+    
+    def save(self, *args, **kwargs):
+        """Override save para validar posiciones antes de guardar"""
+        if self.posiciones:
+            es_valido, mensaje = self.validar_posiciones()
+            if not es_valido:
+                raise ValueError(f"Error en posiciones: {mensaje}")
+        
         super().save(*args, **kwargs)

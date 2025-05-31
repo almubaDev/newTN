@@ -9,25 +9,19 @@ from django.db import models
 from user.models import CustomUser
 from .models import Set, Mazo, Carta, ComplementosMazo
 from .forms import SetForm, MazoForm, CartaForm, BuscarCartasForm, ComplementosMazoForm
-
-
 from django.http import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
 import math
-
-# views.py - Agregar esta función
-
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from django.contrib.admin.views.decorators import staff_member_required
-from django.template.loader import render_to_string
-from django.conf import settings
-from weasyprint import HTML, CSS
 from django.core.files.base import ContentFile
 import os
-import math
+
+
+
+
+
+
 
 @staff_member_required
 def generar_plantilla_pdf(request, mazo_id):

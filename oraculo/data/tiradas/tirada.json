@@ -1,0 +1,22 @@
+{
+    "nombre": "Tirada del Tiempo",
+    "mazo_codigo": "TIEMPO2024",
+    "descripcion": "Una tirada simple de 3 cartas que explora pasado, presente y futuro",
+    "permite_invertidas": true,
+    "activa": true,
+    "imagen_mesa": "media/tiradas/mesa_3_cartas.jpg",
+    "posiciones": {
+        "1": {
+            "nombre": "Pasado",
+            "descripcion": "Eventos del pasado que influyen en la situación actual"
+        },
+        "2": {
+            "nombre": "Presente",
+            "descripcion": "La situación actual y las energías del momento"
+        },
+        "3": {
+            "nombre": "Futuro",
+            "descripcion": "Tendencias probables si continúas en la dirección actual"
+        }
+    }
+}
